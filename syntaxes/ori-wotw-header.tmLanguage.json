@@ -1,0 +1,305 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Ori 2 Header Language",
+    "scopeName": "source.wotwrh",
+    "patterns": [
+        { "include": "#uberState" },
+        { "include": "#pickup" },
+        { "include": "#command" },
+        { "include": "#comment" }
+    ],
+    "repository": {
+        "uberState": {
+            "match": "^(!)?\\d+\\|\\d+(=\\d+)?\\|",
+            "captures": {
+                "0": { "name": "keyword.control" },
+                "1": { "name": "string" }
+            }
+        },
+        "pickup": {
+            "patterns": [
+                { "include": "#spiritLight" },
+                { "include": "#resource" },
+                { "include": "#ability" },
+                { "include": "#shard" },
+                { "include": "#syscommand" },
+                { "include": "#teleporter" },
+                { "include": "#message" },
+                { "include": "#setUberState" },
+                { "include": "#water" },
+                { "include": "#bonusItem" },
+                { "include": "#bonusUpgrade" },
+                { "include": "#relic" },
+                { "include": "#progressMessage" },
+                { "include": "#wheelcommand" },
+                { "include": "#shopcommand" }
+            ]
+        },
+        "spiritLight": {
+            "match": "(0\\|)\\d+",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "resource": {
+            "match": "1\\|[0-4]",
+            "name": "variable.other.enummember"
+        },
+        "ability": {
+            "match": "2\\|-?([03589]|1[45]|23|5[17]|62|7[47]|9[78]|1(0[0124689]|1[4568]|2[01]))",
+            "name": "variable.other.enummember"
+        },
+        "shard": {
+            "match": "3\\|-?([1234589]|1[3489]|2[235678]|3[02345689]|4[013467])",
+            "name": "variable.other.enummember"
+        },
+        "syscommand": {
+            "patterns": [
+                { "include": "#autosave" },
+                { "include": "#setResource" },
+                { "include": "#statue" },
+                { "include": "#warp" },
+                { "include": "#setPlayerResource" },
+                { "include": "#setSpiritLight" },
+                { "include": "#equip" },
+                { "include": "#keybind" },
+                { "include": "#if" },
+                { "include": "#setSync" }
+            ]
+        },
+        "autosave": {
+            "match": "4\\|[02]",
+            "name": "variable.other.enummember"
+        },
+        "setResource": {
+            "match": "4\\|1\\|[0-4]\\|(\\d+)",
+            "captures": {
+                "0": { "name": "variable.other.enummember" },
+                "1": { "name": "variable" }
+            }
+        },
+        "statue": {
+            "match": "4\\|7\\|0\\|[01]",
+            "name": "variable.other.enummember"
+        },
+        "warp": {
+            "match": "(4\\|8\\|)\\d+(?:[.,]\\d+)?\\|\\d+(?:[.,]\\d+)?",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "setPlayerResource": {
+            "match": "(4\\|1[23]\\|)\\d+(?:[.,]\\d+)?",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "setSpiritLight": {
+            "match": "(4\\|14\\|)\\d+",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "equip": {
+            "match": "4\\|15\\|[0-2]\\|(100[0-5]|20[01]\\d|300[0-5]|400\\d)",
+            "name": "variable.other.enummember"
+        },
+        "keybind": {
+            "match": "(4\\|16\\|)\\w+",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "if": {
+            "match": "(4\\|1[7-9]\\|)(\\d+\\|\\d+\\|\\d+([.,]\\d+)?\\|)",
+            "captures": {
+                "1": { "name": "variable.other.enummember" },
+                "2": { "name": "keyword.control" }
+            }
+        },
+        "setSync": {
+            "match": "(4\\|2[01]\\|)\\d+\\|\\d+",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "teleporter": {
+            "match": "5\\|-?(\\d|1[0-7])",
+            "name": "variable.other.enummember"
+        },
+        "message": {
+            "match": "6\\|",
+            "name": "variable.other.enummember"
+        },
+        "setUberState": {
+            "patterns": [
+                { "include": "#setBoolUberState" },
+                { "include": "#setIntUberState" },
+                { "include": "#setFloatUberState" }
+            ]
+        },
+        "setBoolUberState": {
+            "match": "(8\\|)\\d+\\|\\d+\\|(?:bool|teleporter)\\|(?:true|false)",
+            "captures": {
+                "0": { "name": "entity.name.function" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "setIntUberState": {
+            "match": "(8\\|)\\d+\\|\\d+\\|(?:byte|int)\\|\\d+",
+            "captures": {
+                "0": { "name": "entity.name.function" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "setFloatUberState": {
+            "match": "(8\\|)\\d+\\|\\d+\\|float\\|\\d+(?:[.,]\\d+)?",
+            "captures": {
+                "0": { "name": "entity.name.function" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "water": {
+            "match": "9\\|-?0",
+            "name": "variable.other.enummember"
+        },
+        "bonusItem": {
+            "match": "10\\|3[0156]",
+            "name": "variable.other.enummember"
+        },
+        "bonusUpgrade": {
+            "match": "11\\|(\\d|4[5-9])",
+            "name": "variable.other.enummember"
+        },
+        "relic": {
+            "match": "14\\|(\\d|1[0-2])",
+            "name": "variable.other.enummember"
+        },
+        "progressMessage": {
+            "match": "15\\|([023]|1\\|(\\d|1[0-2]))",
+            "name": "variable.other.enummember"
+        },
+        "wheelcommand": {
+            "patterns": [
+                { "include": "#wheelText" },
+                { "include": "#wheelIcon" },
+                { "include": "#wheelColor" },
+                { "include": "#wheelAction" },
+                { "include": "#wheelSticky" },
+                { "include": "#wheelSwitch" },
+                { "include": "#wheelRemove" },
+                { "include": "#wheelClear" }
+            ]
+        },
+        "wheelText": {
+            "match": "16\\|[01]\\|\\d+\\|(\\d|1[01])\\|",
+            "name": "variable.other.enummember"
+        },
+        "wheelIcon": {
+            "match": "16\\|2\\|\\d+\\|(\\d|1[01])\\|",
+            "name": "variable.other.enummember"
+        },
+        "wheelColor": {
+            "match": "16\\|3\\|\\d+\\|(\\d|1[01])\\|\\d+\\|\\d+\\|\\d+\\|\\d+",
+            "name": "variable.other.enummember"
+        },
+        "wheelAction": {
+            "match": "16\\|4\\|\\d+\\|(\\d|1[01])\\|[0-3]",
+            "name": "variable.other.enummember"
+        },
+        "wheelSticky": {
+            "match": "16\\|5\\|\\d+\\|(true|false)",
+            "name": "variable.other.enummember"
+        },
+        "wheelSwitch": {
+            "match": "16\\|6\\|\\d+",
+            "name": "variable.other.enummember"
+        },
+        "wheelRemove": {
+            "match": "16\\|7\\|\\d+\\|(\\d|1[01])",
+            "name": "variable.other.enummember"
+        },
+        "wheelClear": {
+            "match": "16\\|8",
+            "name": "variable.other.enummember"
+        },
+        "shopcommand": {
+            "match": "17\\|0\\|\\d+\\|\\d+\\|",
+            "name": "variable.other.enummember"
+        },
+        "command": {
+            "patterns": [
+                { "include": "#includeCommand" },
+                { "include": "#excludeCommand" },
+                { "include": "#addCommand" },
+                { "include": "#removeCommand" },
+                { "include": "#nameCommand" },
+                { "include": "#parameterCommand" },
+                { "include": "#poolCommand" },
+                { "include": "#addpoolCommand" },
+                { "include": "#flushCommand" },
+                { "include": "#setCommand" },
+                { "include": "#ifCommand" },
+                { "include": "#endifCommand" }
+            ]
+        },
+        "includeCommand": {
+            "match": "!!include",
+            "name": "keyword"
+        },
+        "excludeCommand": {
+            "match": "!!exclude",
+            "name": "keyword"
+        },
+        "addCommand": {
+            "match": "!!add",
+            "name": "keyword"
+        },
+        "removeCommand": {
+            "match": "!!remove",
+            "name": "keyword"
+        },
+        "nameCommand": {
+            "match": "!!name",
+            "name": "keyword"
+        },
+        "parameterCommand": {
+            "match": "!!parameter",
+            "name": "keyword"
+        },
+        "poolCommand": {
+            "match": "!!pool",
+            "name": "keyword"
+        },
+        "addpoolCommand": {
+            "match": "!!addpool",
+            "name": "keyword"
+        },
+        "flushCommand": {
+            "match": "!!flush",
+            "name": "keyword"
+        },
+        "setCommand": {
+            "match": "!!set",
+            "name": "keyword"
+        },
+        "ifCommand": {
+            "match": "!!if",
+            "name": "keyword"
+        },
+        "endifCommand": {
+            "match": "!!endif",
+            "name": "keyword"
+        },
+        "comment": {
+            "match": "//.*",
+            "name": "comment"
+        }
+    }
+}
