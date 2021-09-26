@@ -90,7 +90,7 @@
             "name": "variable.other.enummember"
         },
         "warp": {
-            "match": "\\G(4\\|8\\|)\\d+([.,]\\d+)?\\|\\d+([.,]\\d+)?\\b",
+            "match": "\\G(4\\|8\\|)-?\\d+([.,]\\d+)?\\|-?\\d+([.,]\\d+)?\\b",
             "captures": {
                 "0": { "name": "variable" },
                 "1": { "name": "variable.other.enummember" }
