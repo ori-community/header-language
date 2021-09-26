@@ -5,6 +5,7 @@
     "patterns": [
         { "include": "#uberState" },
         { "include": "#command" },
+        { "include": "#annotation" },
         { "include": "#comment" }
     ],
     "repository": {
@@ -192,6 +193,10 @@
                             ]
                         }
                     ]
+                },
+                {
+                    "match": "\\|(skip=)?\\d+\\b",
+                    "name": "variable"
                 }
             ]
         },
@@ -371,6 +376,10 @@
         },
         "endifCommand": {
             "match": "^!!endif",
+            "name": "keyword"
+        },
+        "annotation": {
+            "match": "^#\\w+",
             "name": "keyword"
         },
         "comment": {
