@@ -29,7 +29,8 @@
 					"ori-wotw-header"
 				],
 				"extensions": [
-					".wotwrh"
+					".wotwrh",
+					".wotwr"
 				],
 				"configuration": "./language-configuration.json"
 			}
