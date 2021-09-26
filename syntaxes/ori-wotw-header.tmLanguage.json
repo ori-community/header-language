@@ -152,8 +152,61 @@
             ]
         },
         "messageString": {
-            "match": ".",
-            "name": "string"
+            "patterns": [
+                { "include": "#messageFlag" },
+                { "include": "#messageXml" },
+                { "include": "#messageUberStatePointer" },
+                { "include": "#messagePickupWriter" },
+                { "include": "#WHEREIS" },
+                { "include": "#HOWMANY" },
+                { "include": "#messageLineControl" },
+                { "include": "#messageColoring" },
+                {
+                    "match": ".",
+                    "name": "string"
+                }
+            ]
+        },
+        "messageFlag": {
+            "match": "\\|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)",
+            "name": "variable.other.enummember"
+        },
+        "messageLineControl": {
+            "match": "<\\\\>",
+            "name": "string.regexp"
+        },
+        "messageColoring": {
+            "match": "[*@#\\$]",
+            "name": "comment"
+        },
+        "messageXml": {
+            "begin": "<",
+            "end": "$|//|>",
+            "name": "comment"
+        },
+        "messageUberStatePointer": {
+            "match": "\\$\\(\\d+\\|\\d+\\)|\\$\\[\\(\\d+\\|\\d+(=\\d+)?\\)\\]",
+            "name": "string.regexp"
+        },
+        "messagePickupWriter": {
+            "begin": "\\$\\[",
+            "end": "$|//|\\]",
+            "name": "string.regexp",
+            "patterns": [
+                { "include": "#pickup" }
+            ]
+        },
+        "WHEREIS": {
+            "begin": "\\$WHEREIS\\(",
+            "end": "$|//|\\)",
+            "name": "entity.name.function",
+            "contentName": "string.regexp"
+        },
+        "HOWMANY": {
+            "begin": "\\$HOWMANY\\(\\d+,",
+            "end": "$|//|\\)",
+            "name": "entity.name.function",
+            "contentName": "string.regexp"
         },
         "setUberState": {
             "patterns": [
