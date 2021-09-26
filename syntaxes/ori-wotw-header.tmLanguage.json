@@ -6,6 +6,7 @@
         { "include": "#uberState" },
         { "include": "#command" },
         { "include": "#annotation" },
+        { "include": "#placeholder" },
         { "include": "#comment" }
     ],
     "repository": {
@@ -36,7 +37,8 @@
                 { "include": "#relic" },
                 { "include": "#progressMessage" },
                 { "include": "#wheelCommand" },
-                { "include": "#shopCommand" }
+                { "include": "#shopCommand" },
+                { "include": "placeholder" }
             ]
         },
         "spiritLight": {
@@ -168,7 +170,7 @@
         },
         "setNumberUberState": {
             "begin": "\\G(8\\|)\\d+\\|\\d+\\|(byte|int|float)\\|[+-]?",
-            "end": "$|(?=//)",
+            "end": "$|(?=//)|\\s",
             "captures": {
                 "0": { "name": "entity.name.function" },
                 "1": { "name": "variable.other.enummember" }
@@ -178,14 +180,14 @@
                 { "include": "#uberStatePointer" },
                 {
                     "begin": "\\G\\[",
-                    "end": "\\]",
+                    "end": "$|\\]|(?=//|\\s)",
                     "name": "string.regexp",
                     "patterns": [
                         { "include": "#uberStateValue" },
                         { "include": "#uberStatePointer" },
                         {
                             "begin": ",",
-                            "end": "(?=\\])",
+                            "end": "$|(?=(\\]|//|\\s))",
                             "name": "string.regexp",
                             "patterns": [
                                 { "include": "#uberStateValue" },
@@ -317,9 +319,7 @@
         "command": {
             "patterns": [
                 { "include": "#includeCommand" },
-                { "include": "#excludeCommand" },
                 { "include": "#addCommand" },
-                { "include": "#removeCommand" },
                 { "include": "#nameCommand" },
                 { "include": "#parameterCommand" },
                 { "include": "#poolCommand" },
@@ -331,48 +331,79 @@
             ]
         },
         "includeCommand": {
-            "match": "^!!include",
-            "name": "keyword"
-        },
-        "excludeCommand": {
-            "match": "^!!exclude",
-            "name": "keyword"
+            "match": "^(!!(in|ex)clude) \\w+",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "keyword" }
+            }
         },
         "addCommand": {
-            "match": "^!!add",
-            "name": "keyword"
-        },
-        "removeCommand": {
-            "match": "^!!remove",
-            "name": "keyword"
+            "begin": "^(!!(add|remove)) (\\d+x )?",
+            "end": "$|(?=//)",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "keyword" }
+            },
+            "patterns": [
+                { "include": "#pickup" }
+            ]
         },
         "nameCommand": {
-            "match": "^!!name",
-            "name": "keyword"
+            "begin": "^!!name ",
+            "end": "$|(?=//)",
+            "name": "keyword",
+            "patterns": [
+                { "include": "#pickup" },
+                { "include": "#messageString" }
+            ]
         },
         "parameterCommand": {
-            "match": "^!!parameter",
-            "name": "keyword"
+            "match": "^(!!parameter) \\w+ ((bool:)(true|false)|(int:)\\d+|(float:)\\d+([,.]\\d+)?|(string:)\\w+)\\b",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "keyword" },
+                "3": { "name": "entity.name.type" }
+            }
         },
         "poolCommand": {
-            "match": "^!!pool",
-            "name": "keyword"
+            "begin": "^!!pool ",
+            "end": "$|(?=//)",
+            "name": "keyword",
+            "patterns": [
+                {
+                    "match": ".",
+                    "name": "variable"
+                }
+            ]
         },
         "addpoolCommand": {
-            "match": "^!!addpool",
-            "name": "keyword"
+            "match": "^(!!addpool) (\\d+x )",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "keyword" }
+            }
         },
         "flushCommand": {
             "match": "^!!flush",
             "name": "keyword"
         },
         "setCommand": {
-            "match": "^!!set",
-            "name": "keyword"
+            "begin": "^!!set ",
+            "end": "$|(?=//)",
+            "name": "keyword",
+            "patterns": [
+                {
+                    "match": ".",
+                    "name": "variable"
+                }
+            ]
         },
         "ifCommand": {
-            "match": "^!!if",
-            "name": "keyword"
+            "match": "^(!!if) \\w+ (true|false|\\d+([,.]\\d+)?)\\b",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "keyword" }
+            }
         },
         "endifCommand": {
             "match": "^!!endif",
@@ -381,6 +412,23 @@
         "annotation": {
             "match": "^#\\w+",
             "name": "keyword"
+        },
+        "placeholder": {
+            "patterns": [
+                { "include": "#take" },
+                { "include": "#PARAM" }
+            ]
+        },
+        "take": {
+            "match": "!!take",
+            "name": "keyword"
+        },
+        "PARAM": {
+            "match": "\\$PARAM\\((\\w+)\\)",
+            "captures": {
+                "0": { "name": "entity.name.function" },
+                "1": { "name": "variable" }
+            }
         },
         "comment": {
             "match": "//.*",
