@@ -154,12 +154,12 @@
         "messageString": {
             "patterns": [
                 { "include": "#messageFlag" },
+                { "include": "#messageLineControl" },
                 { "include": "#messageXml" },
                 { "include": "#messageUberStatePointer" },
                 { "include": "#messagePickupWriter" },
                 { "include": "#WHEREIS" },
                 { "include": "#HOWMANY" },
-                { "include": "#messageLineControl" },
                 { "include": "#messageColoring" },
                 {
                     "match": ".",
@@ -168,7 +168,7 @@
             ]
         },
         "messageFlag": {
-            "match": "\\|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)",
+            "match": "\\|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)\\|",
             "name": "variable.other.enummember"
         },
         "messageLineControl": {
