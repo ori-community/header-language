@@ -3,6 +3,9 @@
     "name": "Ori 2 Header Language",
     "scopeName": "source.wotwrh",
     "patterns": [
+        { "include": "#flags" },
+        { "include": "#spawn" },
+        { "include": "#timer" },
         { "include": "#uberState" },
         { "include": "#command" },
         { "include": "#annotation" },
@@ -10,6 +13,27 @@
         { "include": "#comment" }
     ],
     "repository": {
+        "flags": {
+            "match": "^Flags:(\\s*\\w+(\\s*,\\s*\\w+)*)?\\b",
+            "captures": {
+                "0": { "name": "variable.other.enummember" },
+                "1": { "name": "variable" }
+            }
+        },
+        "spawn": {
+            "match": "^Spawn:(\\s*-?\\d+([,.]\\d+)?(\\s*,\\s*-?\\d+([,.]\\d+)?)*)\\b",
+            "captures": {
+                "0": { "name": "variable.other.enummember" },
+                "1": { "name": "variable" }
+            }
+        },
+        "timer": {
+            "match": "^timer:(\\s*\\d+\\|\\d+\\|\\d+\\|\\d+)\\b",
+            "captures": {
+                "0": { "name": "variable.other.enummember" },
+                "1": { "name": "variable" }
+            }
+        },
         "uberState": {
             "begin": "^(!)?\\d+\\|\\d+(=\\d+)?\\|",
             "end": "$|(?=//)",
