@@ -66,6 +66,7 @@
                 { "include": "#setResource" },
                 { "include": "#statue" },
                 { "include": "#warp" },
+                { "include": "#applier" },
                 { "include": "#setPlayerResource" },
                 { "include": "#setSpiritLight" },
                 { "include": "#equip" },
@@ -91,6 +92,13 @@
         },
         "warp": {
             "match": "\\G(4\\|8\\|)-?\\d+([.,]\\d+)?\\|-?\\d+([.,]\\d+)?\\b",
+            "captures": {
+                "0": { "name": "variable" },
+                "1": { "name": "variable.other.enummember" }
+            }
+        },
+        "applier": {
+            "match": "\\G(4\\|11\\|)-?\\d+\\|-?\\d+\\b",
             "captures": {
                 "0": { "name": "variable" },
                 "1": { "name": "variable.other.enummember" }
