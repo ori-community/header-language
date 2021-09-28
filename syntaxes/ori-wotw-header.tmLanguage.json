@@ -200,7 +200,7 @@
             ]
         },
         "messageFlag": {
-            "match": "\\|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)\\|",
+            "match": "((\\||\\G)(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear))|(mute|f=\\d+|instant|quiet|p=\\d+([,.]\\d+)?|noclear)\\|",
             "name": "variable.other.enummember"
         },
         "messageLineControl": {
