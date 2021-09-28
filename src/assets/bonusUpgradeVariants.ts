@@ -1,4 +1,4 @@
-const bonusUpgradeTypes: { [index: string]: string | undefined } = {
+const bonusUpgradeVariants: { [index: string]: string | undefined } = {
     "0": "Rapid Hammer",
     "1": "Rapid Sword",
     "2": "Blaze Efficiency",
@@ -15,4 +15,4 @@ const bonusUpgradeTypes: { [index: string]: string | undefined } = {
     "48": "Charge Blaze",
     "49": "Rapid Sentry",
 };
-export default bonusUpgradeTypes;
+export default bonusUpgradeVariants;

@@ -1,4 +1,4 @@
-const teleporterTypes: { [index: string]: string | undefined } = {
+const teleporterVariants: { [index: string]: string | undefined } = {
     "0": "Midnight Burrows Teleporter",
     "1": "Howl’s Den Teleporter",
     "2": "East Luma Teleporter",
@@ -18,4 +18,4 @@ const teleporterTypes: { [index: string]: string | undefined } = {
     "16": "Inkwater Marsh Teleporter",
     "17": "Glades Teleporter",
 };
-export default teleporterTypes;
+export default teleporterVariants;

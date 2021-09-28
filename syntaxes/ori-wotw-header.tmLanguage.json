@@ -136,7 +136,7 @@
             }
         },
         "setSpiritLight": {
-            "match": "\\G(4\\|14\\|)\\d+\\b",
+            "match": "\\G(4\\|14\\|)-?\\d+\\b",
             "captures": {
                 "0": { "name": "variable" },
                 "1": { "name": "variable.other.enummember" }
@@ -154,7 +154,7 @@
             }
         },
         "if": {
-            "begin": "\\G(4\\|1[7-9]\\|)(\\d+\\|\\d+\\|\\d+([.,]\\d+)?\\|)\\b",
+            "begin": "\\G(4\\|1[7-9]\\|)(\\d+\\|\\d+\\|-?\\d+([.,]\\d+)?\\|)\\b",
             "end": "$|(?=//)",
             "captures": {
                 "1": { "name": "variable.other.enummember" },

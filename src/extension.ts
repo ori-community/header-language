@@ -1,57 +1,42 @@
 import * as vscode from 'vscode';
 
-import uberStates from './assets/uberStates';
+import parseUberState from './parseUberState';
 import parsePickup from './parsePickup';
-
-function nameUberState(uberGroup: string, uberId: string) {
-    const entry = uberStates.find(entry => entry.groupId === uberGroup && entry.uberId === uberId);
-    return entry?.id;
-}
-
-function namePickup(pickupString: string) {
-    const pickup = parsePickup(pickupString);
-    return pickup?.name;
-}
 
 class HeaderHoverProvider implements vscode.HoverProvider {
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
         const line = document.lineAt(position);
-        const positionOffset = position.character - line.range.start.character;
-        const lineText = line.text;
+        let lineText = line.text;
+
+        const commentIndex = lineText.indexOf("//");
+        if (commentIndex !== -1) {
+            lineText = lineText.slice(0, commentIndex);
+        }
+        lineText = lineText.trimEnd();
+
+        let contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ];
 
         const [uberGroup, uberId] = lineText.split("|", 2);
         const separatorIndex = uberGroup.length + uberId.length + 1;
 
-        const isUberStatePart = positionOffset <= separatorIndex;
-        if (isUberStatePart) {
-            const name = nameUberState(uberGroup, uberId);
+        const uberStateName = parseUberState(uberGroup, uberId);
+        contents.push(`**Location**\n\n${uberStateName}`);
 
-            let contents = [ lineText.slice(0, separatorIndex) ];
-            if (name !== undefined) {
-                contents.push(name);
+        let pickupString = lineText.slice(separatorIndex + 1);
+
+        let pickup = parsePickup(pickupString);
+        if (pickup === undefined) {
+            contents.push(`**Pickup**\n\n${pickupString}`);
+        } else {
+            while (true) {
+                contents.push(`**Pickup**\n\n${pickup.name}`);
+
+                if (pickup.next === null) {
+                    break;
+                } else {
+                    pickup = pickup.next;
+                }
             }
-
-            return { contents: contents };
-        }
-
-        let pickup = lineText.slice(separatorIndex + 1);
-
-        const commentIndex = pickup.indexOf("//");
-        if (commentIndex !== -1) {
-            pickup = pickup.slice(0, commentIndex);
-        }
-
-        pickup = pickup.trimEnd();
-
-        if (positionOffset > separatorIndex + pickup.length) {
-            return undefined;
-        }
-
-        const name = namePickup(pickup);
-
-        let contents = [ pickup ];
-        if (name !== undefined) {
-            contents.push(name);
         }
 
         return { contents: contents };

@@ -1,4 +1,4 @@
-const relicTypes: { [index: string]: string | undefined } = {
+const relicVariants: { [index: string]: string | undefined } = {
     "0": "Inkwater Marsh Relic",
     "1": "Kwolok’s Hollow Relic",
     "2": "Wellspring Glades Relic",
@@ -13,4 +13,4 @@ const relicTypes: { [index: string]: string | undefined } = {
     "11": "Willow’s End Relic",
     "12": "Void Relic",
 };
-export default relicTypes;
+export default relicVariants;

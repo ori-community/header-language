@@ -1,4 +1,4 @@
-const abilityTypes: { [index: string]: string | undefined } = {
+const abilityVariants: { [index: string]: string | undefined } = {
     "0": "Bash",
     "3": "Wall Jump",
     "5": "Double Jump",
@@ -28,4 +28,4 @@ const abilityTypes: { [index: string]: string | undefined } = {
     "120": "Ancestral Light",
     "121": "Ancestral Light",
 };
-export default abilityTypes;
+export default abilityVariants;

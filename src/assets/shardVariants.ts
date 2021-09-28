@@ -1,4 +1,4 @@
-const shardTypes: { [index: string]: string | undefined } = {
+const shardVariants: { [index: string]: string | undefined } = {
     "1": "Overcharge",
     "2": "Triple Jump",
     "3": "Wingclip",
@@ -31,4 +31,4 @@ const shardTypes: { [index: string]: string | undefined } = {
     "46": "Fracture",
     "47": "Arcing",
 };
-export default shardTypes;
+export default shardVariants;
