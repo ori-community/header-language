@@ -62,7 +62,7 @@
                 { "include": "#progressMessage" },
                 { "include": "#wheelCommand" },
                 { "include": "#shopCommand" },
-                { "include": "placeholder" }
+                { "include": "#placeholder" }
             ]
         },
         "spiritLight": {
@@ -346,14 +346,14 @@
         "icon": {
             "patterns": [
                 {
-                    "match": "\\G((shard|spell|map|opher|lupo|grom|tuley):)\\d+",
+                    "match": "((shard|spell|map|opher|lupo|grom|tuley):)\\d+",
                     "captures": {
                         "0": { "name": "variable" },
                         "1": { "name": "entity.name.type" }
                     }
                 },
                 {
-                    "begin": "\\Gfile:",
+                    "begin": "file:",
                     "end": "$|(?=//)",
                     "name": "entity.name.type",
                     "patterns": [
@@ -406,6 +406,7 @@
                 { "include": "#includeCommand" },
                 { "include": "#addCommand" },
                 { "include": "#nameCommand" },
+                { "include": "#iconCommand" },
                 { "include": "#parameterCommand" },
                 { "include": "#poolCommand" },
                 { "include": "#addpoolCommand" },
@@ -440,6 +441,15 @@
             "patterns": [
                 { "include": "#pickup" },
                 { "include": "#messageString" }
+            ]
+        },
+        "iconCommand": {
+            "begin": "^(!!icon) ",
+            "end": "$|(?=//)",
+            "beginCaptures": { "1": { "name": "keyword" } },
+            "patterns": [
+                { "include": "#pickup" },
+                { "include": "#icon" }
             ]
         },
         "parameterCommand": {
