@@ -74,7 +74,7 @@ const wheelSwitchRegex = /^6\|(\d+)$/;
 const wheelRemoveRegex = /^7\|(\d+)\|(\d|1[01])$/;
 const wheelClearRegex = /^8$/;
 
-const iconRegex = /^(?:file:(.+?)|((?:shard|spell|map|opher|lupo|grom|tuley):\d+))$/;
+const iconRegex = /^(?:file:(.+?)|((?:shard|spell|opher|lupo|grom|tuley):\d+))$/;
 
 function parseSimplePickup(string: string, regex: RegExp, name: string, canRemove: boolean): Pickup | undefined {
     const match = string.match(regex);
