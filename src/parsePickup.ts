@@ -55,6 +55,8 @@ const ifGreaterRegex = /^18\|(\d+)\|(\d+)\|(-?\d+(?:[,.]\d+)?)\|/;
 const ifLessRegex = /^19\|(\d+)\|(\d+)\|(-?\d+(?:[,.]\d+)?)\|/;
 const disableSyncRegex = /^20\|(\d+)\|(\d+)$/;
 const enableSyncRegex = /^21\|(\d+)\|(\d+)$/;
+const createWarpRegex = /^22\|(\d+)\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[,.]\d+)?)$/;
+const destroyWarpRegex = /^23\|(\d+)$/;
 
 const integerValueRegex = /^(\d+)(?:\|(?:skip=)?(\d+))?$/;
 const integerBoundaryValueRegex = /^(\d+)$/;
@@ -205,6 +207,16 @@ function parseEnableSync(string: string): Pickup | undefined {
         return `Enable multiplayer sync for ${uberStateName}`;
     });
 }
+function parseCreateWarp(string: string): Pickup | undefined {
+    return parseValuePickup(string, createWarpRegex, ([id, x, y]) => {
+        return `Create warp icon ${id} at ${x}, ${y}`;
+    });
+}
+function parseDestroyWarp(string: string): Pickup | undefined {
+    return parseValuePickup(string, destroyWarpRegex, ([id, x, y]) => {
+        return `Destroy warp icon ${id} at ${x}, ${y}`;
+    });
+}
 const sysCommandParsers = [
     parseAutoSave,
     parseSetResource,
@@ -222,6 +234,8 @@ const sysCommandParsers = [
     parseIfLess,
     parseDisableSync,
     parseEnableSync,
+    parseCreateWarp,
+    parseDestroyWarp,
 ];
 function parseSysCommand(string: string): Pickup | undefined {
     const match = string.match(sysCommandRegex);

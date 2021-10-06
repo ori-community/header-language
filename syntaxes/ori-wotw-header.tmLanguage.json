@@ -96,7 +96,9 @@
                 { "include": "#equip" },
                 { "include": "#keybind" },
                 { "include": "#if" },
-                { "include": "#setSync" }
+                { "include": "#setSync" },
+                { "include": "#createWarp" },
+                { "include": "#destroyWarp" }
             ]
         },
         "autosave": {
@@ -171,6 +173,20 @@
                 "1": { "name": "variable.other.enummember" }
             }
         },
+        "createWarp": {
+            "match": "\\G(4\\|22\\|)(\\d+\\|-?\\d+(?:[.,]\\d+)?\\|-?\\d+(?:[.,]\\d+)?)\\b",
+            "captures": {
+                "1": { "name": "variable.other.enummember" },
+                "2": { "name": "variable" }
+            }
+        },
+        "destroyWarp": {
+            "match": "\\G(4\\|23\\|)(\\d+)\\b",
+            "captures": {
+                "1": { "name": "variable.other.enummember" },
+                "2": { "name": "variable" }
+            }
+        },
         "teleporter": {
             "match": "\\G5\\|-?(\\d|1[0-7])\\b",
             "name": "variable.other.enummember"
@@ -193,6 +209,7 @@
                 { "include": "#WHEREIS" },
                 { "include": "#HOWMANY" },
                 { "include": "#messageColoring" },
+                { "include": "#messageNewLine" },
                 {
                     "match": ".",
                     "name": "string"
@@ -206,10 +223,6 @@
         "messageLineControl": {
             "match": "<\\\\>",
             "name": "string.regexp"
-        },
-        "messageColoring": {
-            "match": "[*@#\\$]",
-            "name": "comment"
         },
         "messageXml": {
             "begin": "<",
@@ -239,6 +252,14 @@
             "end": "$|//|\\)",
             "name": "entity.name.function",
             "contentName": "string.regexp"
+        },
+        "messageColoring": {
+            "match": "[*@#\\$]",
+            "name": "comment"
+        },
+        "messageNewLine": {
+            "match": "\\\\n",
+            "name": "constant.character.escape"
         },
         "setUberState": {
             "patterns": [
