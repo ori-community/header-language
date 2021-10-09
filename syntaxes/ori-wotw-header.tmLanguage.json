@@ -98,7 +98,9 @@
                 { "include": "#if" },
                 { "include": "#setSync" },
                 { "include": "#createWarp" },
-                { "include": "#destroyWarp" }
+                { "include": "#destroyWarp" },
+                { "include": "#ifbounds" },
+                { "include": "#ifself" }
             ]
         },
         "autosave": {
@@ -186,6 +188,28 @@
                 "1": { "name": "variable.other.enummember" },
                 "2": { "name": "variable" }
             }
+        },
+        "ifbounds": {
+            "begin": "\\G(4\\|24\\|)((?:-?\\d+(?:[.,]\\d+)?\\|){4})\\b",
+            "end": "$|(?=//)",
+            "captures": {
+                "1": { "name": "variable.other.enummember" },
+                "2": { "name": "keyword.control" }
+            },
+            "patterns": [
+                { "include": "#pickup" }
+            ]
+        },
+        "ifself": {
+            "begin": "\\G(4\\|2[5-7]\\|)(-?\\d+(?:[.,]\\d+)?\\|)\\b",
+            "end": "$|(?=//)",
+            "captures": {
+                "1": { "name": "variable.other.enummember" },
+                "2": { "name": "keyword.control" }
+            },
+            "patterns": [
+                { "include": "#pickup" }
+            ]
         },
         "teleporter": {
             "match": "\\G5\\|-?(\\d|1[0-7])\\b",

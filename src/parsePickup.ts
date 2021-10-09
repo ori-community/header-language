@@ -57,6 +57,10 @@ const disableSyncRegex = /^20\|(\d+)\|(\d+)$/;
 const enableSyncRegex = /^21\|(\d+)\|(\d+)$/;
 const createWarpRegex = /^22\|(\d+)\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[,.]\d+)?)$/;
 const destroyWarpRegex = /^23\|(\d+)$/;
+const ifBoundsRegex = /^24\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[,.]\d+)?)\|/;
+const ifSelfEqualRegex = /^25\|(-?\d+(?:[,.]\d+)?)\|/;
+const ifSelfGreaterRegex = /^26\|(-?\d+(?:[,.]\d+)?)\|/;
+const ifSelfLessRegex = /^27\|(-?\d+(?:[,.]\d+)?)\|/;
 
 const integerValueRegex = /^(\d+)(?:\|(?:skip=)?(\d+))?$/;
 const integerBoundaryValueRegex = /^(\d+)$/;
@@ -217,6 +221,39 @@ function parseDestroyWarp(string: string): Pickup | undefined {
         return `Destroy warp icon ${id} at ${x}, ${y}`;
     });
 }
+function parseIfBounds(string: string): Pickup | undefined {
+    const match = string.match(ifBoundsRegex);
+    if (match === null) { return undefined; }
+
+    console.log(match);
+
+    const [x1, y1, x2, y2] = match.slice(1);
+
+    const next = string.slice(match[0].length);
+    const pickup = parsePickup(next) ?? { name: next, next: null };
+
+    return { name: `Grant this pickup if Ori is within the rectangle defined by ${x1},${y1}/${x2},${y2}`, next: pickup };
+}
+function parseIfSelf(string: string, regex: RegExp, condition: string): Pickup | undefined {
+    const match = string.match(regex);
+    if (match === null) { return undefined; }
+
+    const value = +match[1];
+
+    const next = string.slice(match[0].length);
+    const pickup = parsePickup(next) ?? { name: next, next: null };
+
+    return { name: `Grant this pickup if the location uberState's value is ${condition} ${value}`, next: pickup };
+}
+function parseIfSelfEqual(string: string): Pickup | undefined {
+    return parseIfSelf(string, ifSelfEqualRegex, "equal to");
+}
+function parseIfSelfGreater(string: string): Pickup | undefined {
+    return parseIfSelf(string, ifSelfGreaterRegex, "greater than");
+}
+function parseIfSelfLess(string: string): Pickup | undefined {
+    return parseIfSelf(string, ifSelfLessRegex, "less than");
+}
 const sysCommandParsers = [
     parseAutoSave,
     parseSetResource,
@@ -236,6 +273,10 @@ const sysCommandParsers = [
     parseEnableSync,
     parseCreateWarp,
     parseDestroyWarp,
+    parseIfBounds,
+    parseIfSelfEqual,
+    parseIfSelfGreater,
+    parseIfSelfLess,
 ];
 function parseSysCommand(string: string): Pickup | undefined {
     const match = string.match(sysCommandRegex);
