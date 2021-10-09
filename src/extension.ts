@@ -16,6 +16,10 @@ class HeaderHoverProvider implements vscode.HoverProvider {
 
         let contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ];
 
+        if (lineText[0] === "!") {
+            lineText = lineText.slice(1);
+        }
+
         const [uberGroup, uberId] = lineText.split("|", 2);
         const separatorIndex = uberGroup.length + uberId.length + 1;
 
