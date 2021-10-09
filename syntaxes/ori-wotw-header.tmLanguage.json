@@ -250,7 +250,7 @@
         },
         "messageXml": {
             "begin": "<",
-            "end": "$|//|>",
+            "end": "$|(?=//)|>",
             "name": "comment"
         },
         "messageUberStatePointer": {
@@ -259,7 +259,7 @@
         },
         "messagePickupWriter": {
             "begin": "\\$\\[",
-            "end": "$|//|\\]",
+            "end": "$|(?=//)|\\]",
             "name": "string.regexp",
             "patterns": [
                 { "include": "#pickup" }
@@ -267,15 +267,54 @@
         },
         "WHEREIS": {
             "begin": "\\$WHEREIS\\(",
-            "end": "$|//|\\)",
+            "end": "$|(?=//)|\\)",
             "name": "entity.name.function",
-            "contentName": "string.regexp"
+            "patterns": [
+                { "include": "#regex" }
+            ]
         },
         "HOWMANY": {
             "begin": "\\$HOWMANY\\(\\d+,",
-            "end": "$|//|\\)",
-            "name": "entity.name.function",
-            "contentName": "string.regexp"
+            "end": "$|(?=//)|\\)",
+            "beginCaptures": {
+                "0": { "name": "entity.name.function" }
+            },
+            "endCaptures": {
+                "0": { "name": "entity.name.function" }
+            },
+            "contentName": "string.regexp",
+            "patterns": [
+                { "include": "#regex" }
+            ]
+        },
+        "regex": {
+            "patterns": [
+                {
+                    "begin": "\\(",
+                    "end": "$|(?=//)|\\)",
+                    "beginCaptures": {
+                        "0": { "name": "string" }
+                    },
+                    "endCaptures": {
+                        "0": { "name": "string" }
+                    },
+                    "patterns": [
+                        { "include": "#regex" }
+                    ]
+                },
+                {
+                    "match": "\\\\.",
+                    "name": "constant.character.escape"
+                },
+                {
+                    "match": "\\|",
+                    "name": "keyword.operator.or.regexp"
+                },
+                {
+                    "match": "[\\[\\]\\{\\}]",
+                    "name": "string"
+                }
+            ]
         },
         "messageColoring": {
             "match": "[*@#\\$]",
@@ -317,7 +356,7 @@
                         { "include": "#uberStatePointer" },
                         {
                             "begin": ",",
-                            "end": "$|(?=(\\]|//|\\s))",
+                            "end": "$|(?=(\\]|(?=//)|\\s))",
                             "name": "string.regexp",
                             "patterns": [
                                 { "include": "#uberStateValue" },
