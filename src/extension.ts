@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 
-import parseUberState from './parseUberState';
-import parsePickup from './parsePickup';
+import { parseLine } from './parseLine';
 
 class HeaderHoverProvider implements vscode.HoverProvider {
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken) {
-        const line = document.lineAt(position);
-        let lineText = line.text;
+        const documentLine = document.lineAt(position);
+        let lineText = documentLine.text;
 
         const commentIndex = lineText.indexOf("//");
         if (commentIndex !== -1) {
@@ -14,34 +13,10 @@ class HeaderHoverProvider implements vscode.HoverProvider {
         }
         lineText = lineText.trimEnd();
 
-        let contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ];
+        let line = parseLine(lineText);
+        if (line === undefined) { return undefined; }
 
-        if (lineText[0] === "!") {
-            lineText = lineText.slice(1);
-        }
-
-        const [uberGroup, uberId] = lineText.split("|", 2);
-        const separatorIndex = uberGroup.length + uberId.length + 1;
-
-        const uberStateName = parseUberState(uberGroup, uberId);
-        contents.push(`**Location**\n\n${uberStateName}`);
-
-        let pickupString = lineText.slice(separatorIndex + 1);
-
-        let pickup = parsePickup(pickupString);
-        if (pickup === undefined) {
-            contents.push(`**Pickup**\n\n${pickupString}`);
-        } else {
-            while (true) {
-                contents.push(`**Pickup**\n\n${pickup.name}`);
-
-                if (pickup.next === null) {
-                    break;
-                } else {
-                    pickup = pickup.next;
-                }
-            }
-        }
+        let contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ].concat(line.description);
 
         return { contents: contents };
     }

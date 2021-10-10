@@ -8,11 +8,11 @@ import bonusItemVariants from "./assets/bonusItemVariants";
 import bonusUpgradeVariants from "./assets/bonusUpgradeVariants";
 import relicVariants from "./assets/relicVariants";
 import progressMessageVariants from "./assets/progressMessageVariants";
-import iconVariants from "./assets/iconVariants";
 
-import parseUberState from './parseUberState';
+import { parseUberState } from './parseUberState';
+import { parseIcon } from './parseIcon';
 
-interface Pickup {
+export interface Pickup {
     /**
      * The human friendly name of this pickup
      */
@@ -79,8 +79,6 @@ const wheelStickyRegex = /^5\|(\d+)\|(true|false)$/;
 const wheelSwitchRegex = /^6\|(\d+)$/;
 const wheelRemoveRegex = /^7\|(\d+)\|(\d|1[01])$/;
 const wheelClearRegex = /^8$/;
-
-const iconRegex = /^(?:file:(.+?)|((?:shard|spell|opher|lupo|grom|tuley):\d+))$/;
 
 function parseSimplePickup(string: string, regex: RegExp, name: string, canRemove: boolean): Pickup | undefined {
     const match = string.match(regex);
@@ -181,14 +179,14 @@ function parseIf(string: string, regex: RegExp, condition: string): Pickup | und
 
     const uberGroup = match[1];
     const uberId = match[2];
-    const uberStateName = parseUberState(uberGroup, uberId);
+    const uberState = parseUberState(uberGroup, uberId);
 
     const value = +match[3];
 
     const next = string.slice(match[0].length);
     const pickup = parsePickup(next) ?? { name: next, next: null };
 
-    return { name: `Grant this pickup if ${uberStateName} is ${condition} ${value}`, next: pickup };
+    return { name: `Grant this pickup if ${uberState.name} is ${condition} ${value}`, next: pickup };
 }
 function parseIfEqual(string: string): Pickup | undefined {
     return parseIf(string, ifEqualRegex, "equal to");
@@ -201,14 +199,14 @@ function parseIfLess(string: string): Pickup | undefined {
 }
 function parseDisableSync(string: string): Pickup | undefined {
     return parseValuePickup(string, disableSyncRegex, ([uberGroup, uberId]) => {
-        const uberStateName = parseUberState(uberGroup.toString(), uberId.toString());
-        return `Disable multiplayer sync for ${uberStateName}`;
+        const uberState = parseUberState(uberGroup.toString(), uberId.toString());
+        return `Disable multiplayer sync for ${uberState.name}`;
     });
 }
 function parseEnableSync(string: string): Pickup | undefined {
     return parseValuePickup(string, enableSyncRegex, ([uberGroup, uberId]) => {
-        const uberStateName = parseUberState(uberGroup.toString(), uberId.toString());
-        return `Enable multiplayer sync for ${uberStateName}`;
+        const uberState = parseUberState(uberGroup.toString(), uberId.toString());
+        return `Enable multiplayer sync for ${uberState.name}`;
     });
 }
 function parseCreateWarp(string: string): Pickup | undefined {
@@ -243,7 +241,7 @@ function parseIfSelf(string: string, regex: RegExp, condition: string): Pickup |
     const next = string.slice(match[0].length);
     const pickup = parsePickup(next) ?? { name: next, next: null };
 
-    return { name: `Grant this pickup if the location uberState's value is ${condition} ${value}`, next: pickup };
+    return { name: `Grant this pickup if the location's value is ${condition} ${value}`, next: pickup };
 }
 function parseIfSelfEqual(string: string): Pickup | undefined {
     return parseIfSelf(string, ifSelfEqualRegex, "equal to");
@@ -304,11 +302,11 @@ function parsePointerValue(string: string): [string, string | undefined] | undef
 
     const uberGroup = match[1];
     const uberId = match[2];
-    const uberStateName = parseUberState(uberGroup, uberId);
+    const uberState = parseUberState(uberGroup, uberId);
 
     const skip = match[3];
 
-    return [`the value of ${uberStateName}`, skip];
+    return [`the value of ${uberState.name}`, skip];
 }
 function parseValue(string: string, regex: RegExp): [string, string | undefined] | undefined {
     const match = string.match(regex);
@@ -327,9 +325,9 @@ function parseBoundaryPointerValue(string: string): string | undefined {
 
     const uberGroup = match[1];
     const uberId = match[2];
-    const uberStateName = parseUberState(uberGroup, uberId);
+    const uberState = parseUberState(uberGroup, uberId);
 
-    return `the value of ${uberStateName}`;
+    return `the value of ${uberState.name}`;
 }
 function parseBoundaryValue(string: string, regex: RegExp): string | undefined {
     const match = string.match(regex);
@@ -363,13 +361,13 @@ function parseSetUberState(string: string): Pickup | undefined {
 
     const uberGroup = match[1];
     const uberId = match[2];
-    const uberStateName = parseUberState(uberGroup, uberId);
+    const uberState = parseUberState(uberGroup, uberId);
 
     const isBool = match[3] !== undefined;
     if (isBool) {
         const value = match[4];
 
-        return { name: `Set ${uberStateName} to ${value}`, next: null };
+        return { name: `Set ${uberState.name} to ${value}`, next: null };
     }
 
     const uberStateType = match[5];
@@ -402,9 +400,9 @@ function parseSetUberState(string: string): Pickup | undefined {
             : `, skipping the next ${skip} triggers`;
 
         switch (operator) {
-            case undefined: return { name: `Set ${uberStateName} to ${value}${skipDescription}`, next: null };
-            case "+": return { name: `Add ${value} to ${uberStateName}${skipDescription}`, next: null };
-            case "-": return { name: `Subtract ${value} from ${uberStateName}${skipDescription}`, next: null };
+            case undefined: return { name: `Set ${uberState.name} to ${value}${skipDescription}`, next: null };
+            case "+": return { name: `Add ${value} to ${uberState.name}${skipDescription}`, next: null };
+            case "-": return { name: `Subtract ${value} from ${uberState.name}${skipDescription}`, next: null };
             default: return undefined;
         }
     }
@@ -423,20 +421,6 @@ function parseRelic(string: string): Pickup | undefined {
 }
 function parseProgressMessage(string: string): Pickup | undefined {
     return parseVariantPickup(string, progressMessageRegex, progressMessageVariants, false);
-}
-function parseIcon(string: string): string | undefined {
-    const match = string.match(iconRegex);
-    if (match === null) { return undefined; }
-
-    const filepath = match[1];
-    if (filepath !== undefined) {
-        return `file at ${filepath}`;
-    }
-
-    const variant = match[2];
-    const iconName = iconVariants[variant];
-
-    return `${iconName} icon`;
 }
 function parseWheelText(string: string, regex: RegExp, name: string): Pickup | undefined {
     const match = string.match(regex);
@@ -526,7 +510,7 @@ function parseShopIcon(string: string): Pickup | undefined {
     const iconString = string.slice(match[0].length);
     const icon = parseIcon(iconString) ?? iconString;
 
-    return { name: `Sets the shop icon of ${uberState} to the ${icon}`, next: null };
+    return { name: `Sets the shop icon of ${uberState.name} to the ${icon}`, next: null };
 }
 
 const pickupParsers = [
@@ -547,11 +531,25 @@ const pickupParsers = [
     parseShopIcon,
 ];
 
-function parsePickup(string: string): Pickup | undefined {
+export function parsePickup(string: string): Pickup | undefined {
     for (const pickupParser of pickupParsers) {
         const pickup = pickupParser(string);
         if (pickup !== undefined) { return pickup; }
     }
 }
 
-export default parsePickup;
+export function describePickup(pickup: Pickup): string[] {
+    let contents = [];
+
+    while (true) {
+        contents.push(`**Pickup**\n\n${pickup.name}`);
+
+        if (pickup.next === null) {
+            break;
+        } else {
+            pickup = pickup.next;
+        }
+    }
+
+    return contents;
+}
