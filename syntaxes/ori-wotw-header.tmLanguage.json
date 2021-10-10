@@ -554,6 +554,20 @@
                 { "include": "#messageString" }
             ]
         },
+        "priceCommand": {
+            "begin": "^!!price ",
+            "end": "$|(?=//)",
+            "beginCaptures": {
+                "0": { "name": "keyword" }
+            },
+            "patterns": [
+                { "include": "#pickup" },
+                {
+                    "match": "\\d+",
+                    "name": "variable"
+                }
+            ]
+        },
         "iconCommand": {
             "begin": "^!!icon ",
             "end": "$|(?=//)",
