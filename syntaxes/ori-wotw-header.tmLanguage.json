@@ -515,6 +515,7 @@
                 { "include": "#includeCommand" },
                 { "include": "#addCommand" },
                 { "include": "#nameCommand" },
+                { "include": "#priceCommand" },
                 { "include": "#iconCommand" },
                 { "include": "#parameterCommand" },
                 { "include": "#poolCommand" },
