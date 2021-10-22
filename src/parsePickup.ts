@@ -61,6 +61,7 @@ const ifBoundsRegex = /^24\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[,.]\d+)?)\|(-?\d+(?:[
 const ifSelfEqualRegex = /^25\|(-?\d+(?:[,.]\d+)?)\|/;
 const ifSelfGreaterRegex = /^26\|(-?\d+(?:[,.]\d+)?)\|/;
 const ifSelfLessRegex = /^27\|(-?\d+(?:[,.]\d+)?)\|/;
+const unequipRegex = /^28\|(\d+)$/;
 
 const integerValueRegex = /^(\d+)(?:\|(?:skip=)?(\d+))?$/;
 const integerBoundaryValueRegex = /^(\d+)$/;
@@ -252,6 +253,14 @@ function parseIfSelfGreater(string: string): Pickup | undefined {
 function parseIfSelfLess(string: string): Pickup | undefined {
     return parseIfSelf(string, ifSelfLessRegex, "less than");
 }
+function parseUnequip(string: string): Pickup | undefined {
+    const match = string.match(unequipRegex);
+    if (match === null) { return undefined; }
+
+    const equpimentString = match[1];
+    const equipment = equipVariants[equpimentString] ?? equpimentString;
+    return { name: `Unequip ${equipment}`, next: null };
+}
 const sysCommandParsers = [
     parseAutoSave,
     parseSetResource,
@@ -275,6 +284,7 @@ const sysCommandParsers = [
     parseIfSelfEqual,
     parseIfSelfGreater,
     parseIfSelfLess,
+    parseUnequip,
 ];
 function parseSysCommand(string: string): Pickup | undefined {
     const match = string.match(sysCommandRegex);

@@ -102,7 +102,8 @@
                 { "include": "#createWarp" },
                 { "include": "#destroyWarp" },
                 { "include": "#ifbounds" },
-                { "include": "#ifself" }
+                { "include": "#ifself" },
+                { "include": "#unequip" }
             ]
         },
         "autosave": {
@@ -212,6 +213,10 @@
             "patterns": [
                 { "include": "#pickup" }
             ]
+        },
+        "unequip": {
+            "match": "\\G4\\|28\\|(?:100[0-5]|20[01]\\d|300[0-5]|400\\d)\\b",
+            "name": "variable.other.enummember"
         },
         "teleporter": {
             "match": "\\G5\\|-?(?:\\d|1[0-7])\\b",
