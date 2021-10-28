@@ -44,10 +44,10 @@
                 "2": { "name": "keyword.control" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
-        "pickup": {
+        "item": {
             "patterns": [
                 { "include": "#spiritLight" },
                 { "include": "#resource" },
@@ -168,7 +168,7 @@
                 "2": { "name": "keyword.control" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
         "setSync": {
@@ -200,7 +200,7 @@
                 "2": { "name": "keyword.control" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
         "ifself": {
@@ -211,7 +211,7 @@
                 "2": { "name": "keyword.control" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
         "unequip": {
@@ -238,7 +238,7 @@
                 { "include": "#messageLineControl" },
                 { "include": "#messageXml" },
                 { "include": "#messageUberStatePointer" },
-                { "include": "#messagePickupWriter" },
+                { "include": "#messageItemWriter" },
                 { "include": "#WHEREIS" },
                 { "include": "#HOWMANY" },
                 { "include": "#messageColoring" },
@@ -266,7 +266,7 @@
             "match": "\\$\\(\\d+\\|\\d+\\)|\\$\\[\\(\\d+\\|\\d+(=\\d+)?\\)\\]",
             "name": "string.regexp"
         },
-        "messagePickupWriter": {
+        "messageItemWriter": {
             "begin": "\\$\\[",
             "end": "$|(?=//)|\\]",
             "beginCaptures": {
@@ -276,7 +276,7 @@
                 "0": { "name": "string.regexp" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
         "WHEREIS": {
@@ -486,7 +486,7 @@
                 "0": { "name": "variable.other.enummember" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
         "wheelSticky": {
@@ -546,7 +546,7 @@
                 "2": { "name": "variable" }
             },
             "patterns": [
-                { "include": "#pickup" }
+                { "include": "#item" }
             ]
         },
         "nameCommand": {
@@ -556,7 +556,7 @@
                 "0": { "name": "keyword" }
             },
             "patterns": [
-                { "include": "#pickup" },
+                { "include": "#item" },
                 { "include": "#messageString" }
             ]
         },
@@ -567,7 +567,7 @@
                 "0": { "name": "keyword" }
             },
             "patterns": [
-                { "include": "#pickup" },
+                { "include": "#item" },
                 {
                     "match": "\\d+",
                     "name": "variable"
@@ -581,7 +581,7 @@
                 "0": { "name": "keyword" }
             },
             "patterns": [
-                { "include": "#pickup" },
+                { "include": "#item" },
                 { "include": "#icon" }
             ]
         },

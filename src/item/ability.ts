@@ -1,0 +1,37 @@
+import { ItemVariant } from "../item";
+
+export enum AbilityVariant {
+    bash = 0,
+    wallJump = 3,
+    doubleJump = 5,
+    launch = 8,
+    magnet = 9,
+    glide = 14,
+    spiritFlame = 15,
+    waterBreath = 23,
+    lightBurst = 51,
+    grapple = 57,
+    flash = 62,
+    spike = 74,
+    regenerate = 77,
+    bow = 97,
+    hammer = 98,
+    sword = 100,
+    burrow = 101,
+    dash = 102,
+    waterDash = 104,
+    shuriken = 106,
+    seir = 108,
+    bowCharge = 109,
+    hammerCharge = 114,
+    blaze = 115,
+    sentry = 116,
+    flap = 118,
+    ancestralLightA = 120,
+    ancestralLightB = 121,
+}
+export interface Ability {
+    id: ItemVariant.ability,
+    variant: AbilityVariant,
+    remove: boolean,
+}
