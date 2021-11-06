@@ -6,10 +6,14 @@ import OpherIconVariant from "../icon/opherIcon";
 import ShardIconVariant from "../icon/shardIcon";
 import SpellIconVariant from "../icon/spellIcon";
 import TuleyIconVariant from "../icon/tuleyIcon";
-import { ParseSuccess, Token, ParseFailure, parseInteger, succeed, parseWord, fail } from "../parser";
+import { ParseSuccess, Token, ParseFailure, parseInteger, succeed, parseWord, fail, eat } from "../parser";
 
 type ParseIconSuccess = ParseSuccess<Icon>;
 function parseIconId(string: string, typeId: "shard" | "spell" | "opher" | "lupo" | "grom" | "tuley", enumObject: Object, expected: Token, completion: Completion): ParseIconSuccess | ParseFailure {
+    const separatorResult = eat(string, ":");
+    if (separatorResult === null) { return fail(":", string, undefined); }
+    string = separatorResult;
+
     const variantResult = parseInteger(string, true);
     if (variantResult === null) { return fail(expected, string, completion); }
     string = variantResult.remaining;
@@ -38,6 +42,10 @@ function parseIcon(string: string): ParseIconSuccess | ParseFailure {
         case "grom": return parseIconId(string, iconType, GromIconVariant, Token.gromIconValue, { id: CompletionVariant.gromIconValue });
         case "tuley": return parseIconId(string, iconType, TuleyIconVariant, Token.tuleyIconValue, { id: CompletionVariant.tuleyIconValue });
         case "file":
+            const separatorResult = eat(string, ":");
+            if (separatorResult === null) { return fail(":", string, undefined); }
+            string = separatorResult;
+
             const icon: Icon = {
                 id: "file",
                 path: string,  // TODO comments?
