@@ -873,6 +873,10 @@ function parseWheelSetAction(string: string, wheel: number, position: number): P
 
     if (!(bind === 0 || bind === 1 || bind === 2 || bind === 3)) { return fail(Token.wheelItemBind, string, undefined); }
 
+    const separatorResult = eat(string, "|");
+    if (separatorResult === null) { return fail("|", string, undefined); }
+    string = separatorResult;
+
     const itemResult = parseItem(string);
     if (!itemResult.success) { return itemResult; }
     string = itemResult.remaining;
