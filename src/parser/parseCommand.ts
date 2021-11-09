@@ -75,6 +75,24 @@ function parseNameCommand(string: string): ParseCommandSuccess | ParseFailure {
 
     return succeed(command, string);
 }
+function parseDisplayCommand(string: string): ParseCommandSuccess | ParseFailure {
+    const itemResult = parseItem(string);
+    if (!itemResult.success) { return itemResult; }
+    string = itemResult.remaining;
+    const item = itemResult.result;
+
+    const separatorResult = eat(string, " ");
+    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
+    string = separatorResult;
+
+    const command: Command = {
+        id: CommandVariant.display,
+        item,
+        display: string,
+    };
+
+    return succeed(command, string);
+}
 function parsePriceCommand(string: string): ParseCommandSuccess | ParseFailure {
     const itemResult = parseItem(string);
     if (!itemResult.success) { return itemResult; }
@@ -239,6 +257,7 @@ export function parseCommand(string: string): ParseCommandSuccess | ParseFailure
         case "add": return parseChangeItemPool(string, CommandVariant.add);
         case "remove": return parseChangeItemPool(string, CommandVariant.remove);
         case "name": return parseNameCommand(string);
+        case "display": return parseDisplayCommand(string);
         case "price": return parsePriceCommand(string);
         case "icon": return parseIconCommand(string);
         case "parameter": return parseParameterCommand(string);

@@ -7,6 +7,7 @@ export enum CommandVariant {
     add,
     remove,
     name,
+    display,
     price,
     icon,
     parameter,
@@ -40,6 +41,11 @@ export interface NameCommand {
     id: CommandVariant.name,
     item: Item,
     name: string,
+}
+export interface DisplayCommand {
+    id: CommandVariant.display,
+    item: Item,
+    display: string,
 }
 export interface PriceCommand {
     id: CommandVariant.price,
@@ -80,4 +86,4 @@ export interface EndIfCommand {
     id: CommandVariant.endif,
 }
 
-export type Command = IncludeCommand | ExcludeCommand | AddCommand | RemoveCommand | NameCommand | PriceCommand | IconCommand | ParameterCommand | PoolCommand | AddPoolCommand | FlushCommand | SetCommand | IfCommand | EndIfCommand;
+export type Command = IncludeCommand | ExcludeCommand | AddCommand | RemoveCommand | NameCommand | DisplayCommand | PriceCommand | IconCommand | ParameterCommand | PoolCommand | AddPoolCommand | FlushCommand | SetCommand | IfCommand | EndIfCommand;

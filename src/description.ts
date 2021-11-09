@@ -274,6 +274,9 @@ function describeCommand(command: Command): string {
         } case CommandVariant.name: {
             const itemDescription = describeItem(command.item);
             return `Set the name of this item to "${command.name}":\n\n${itemDescription}`;
+        } case CommandVariant.display: {
+            const itemDescription = describeItem(command.item);
+            return `Set the display name of this item to "${command.display}":\n\n${itemDescription}`;
         } case CommandVariant.price: {
             const itemDescription = describeItem(command.item);
             return `Set the price of this item to "${command.price}":\n\n${itemDescription}`;
