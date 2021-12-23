@@ -84,8 +84,16 @@ export function activate(context: vscode.ExtensionContext) {
 
     provideDiagnostics(diagnosticsCollection);
 
+    vscode.workspace.onDidOpenTextDocument(event => {
+        if (vscode.languages.match({ language: "ori-wotw-header" }, event) > 0) {
+            updateDiagnostics(event, diagnosticsCollection);
+        }
+    });
     vscode.workspace.onDidChangeTextDocument(event => {
-        updateDiagnostics(event.document, diagnosticsCollection);
+        const document = event.document;
+        if (vscode.languages.match({ language: "ori-wotw-header" }, document) > 0) {
+            updateDiagnostics(event.document, diagnosticsCollection);
+        }
     });
     vscode.workspace.onDidDeleteFiles(event => {
         for (const file of event.files) {

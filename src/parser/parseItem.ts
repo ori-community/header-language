@@ -26,9 +26,7 @@ function parseVariantItem(
     expected: Token
 ): ParseItemSuccess | ParseFailure {
     const variant = parseInteger(status, true);
-    if (variant === null) { return fail(expected, status, completion); }
-
-    if (!(variant in variantEnum)) { return fail(expected, status, completion); }
+    if (variant === null || !(variant in variantEnum)) { return fail(expected, status, completion); }
 
     const item: Item = {
         id: itemVariant,
@@ -87,9 +85,7 @@ function parseShard(status: ParseStatus): ParseItemSuccess | ParseFailure {
 type ParseCommandSuccess = ParseSuccess<SysSubcommand>;
 function parseSetResource(status: ParseStatus): ParseCommandSuccess | ParseFailure {
     const resource = parseInteger(status);
-    if (resource === null) { return fail(Token.resourceIdentifier, status, { id: CompletionVariant.resource }); }
-
-    if (!(resource in ResourceVariant)) { return fail(Token.resourceIdentifier, status, { id: CompletionVariant.resource }); }
+    if (resource === null || !(resource in ResourceVariant)) { return fail(Token.resourceIdentifier, status, { id: CompletionVariant.resource }); }
 
     if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.resource }); }
 
@@ -109,8 +105,7 @@ function parseKwolokStatue(status: ParseStatus): ParseCommandSuccess | ParseFail
     if (!eat(status, "|")) { return fail("|", status, undefined); }
 
     const value = parseInteger(status);
-    if (value === null) { return fail(Token.integer, status, undefined); }
-    if (![0, 1].includes(value)) { return fail(Token.integer, status, undefined); }
+    if (value === null || ![0, 1].includes(value)) { return fail(Token.integer, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.kwolokStatue,
@@ -175,16 +170,12 @@ function parseSetSpiritLight(status: ParseStatus): ParseCommandSuccess | ParseFa
 }
 function parseEquip(status: ParseStatus): ParseCommandSuccess | ParseFailure {
     const slot = parseInteger(status);
-    if (slot === null) { return fail(Token.slot, status, { id: CompletionVariant.slot }); }
-
-    if (!(slot === 0 || slot === 1 || slot === 2)) { return fail(Token.slot, status, undefined); }
+    if (slot === null || !(slot === 0 || slot === 1 || slot === 2)) { return fail(Token.slot, status, { id: CompletionVariant.slot }); }
 
     if (!eat(status, "|")) { return fail("|", status, undefined); }
 
     const equipment = parseInteger(status);
-    if (equipment === null) { return fail(Token.equipment, status, { id: CompletionVariant.equipment }); }
-
-    if (!(equipment in EquipmentVariants)) { return fail(Token.equipment, status, { id: CompletionVariant.equipment }); }
+    if (equipment === null || !(equipment in EquipmentVariants)) { return fail(Token.equipment, status, { id: CompletionVariant.equipment }); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.equip,
@@ -376,7 +367,10 @@ function parseSubcommand(status: ParseStatus, commandId: number): ParseCommandSu
         case SysCommandVariant.ifSelfEqual: return parseIfSelfEqual(status);
         case SysCommandVariant.ifSelfGreater: return parseIfSelfGreater(status);
         case SysCommandVariant.ifSelfLess: return parseIfSelfLess(status);
-        default: return fail(Token.sysCommandIdentifier, status, { id: CompletionVariant.sysCommand });
+        default:
+            const errorStatus = status.clone();
+            errorStatus.offset -= 2;
+            return fail(Token.sysCommandIdentifier, errorStatus, { id: CompletionVariant.sysCommand });
     }
 }
 function parseCommand(status: ParseStatus): ParseItemSuccess | ParseFailure {
@@ -609,9 +603,7 @@ function parseProgressMessage(status: ParseStatus): ParseItemSuccess | ParseFail
             if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.sysCommand }); }
 
             const zone = parseInteger(status, true);
-            if (zone === null) { return fail(Token.zone, status, { id: CompletionVariant.zone }); }
-
-            if (!(zone in ZoneVariants)) { return fail(Token.zone, status, { id: CompletionVariant.zone }); }
+            if (zone === null || !(zone in ZoneVariants)) { return fail(Token.zone, status, { id: CompletionVariant.zone }); }
 
             const item: Item = {
                 id,
@@ -686,9 +678,7 @@ function parseWheelSetColor(status: ParseStatus, wheel: number, position: number
 }
 function parseWheelSetAction(status: ParseStatus, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
     const bind = parseInteger(status);
-    if (bind === null) { return fail(Token.wheelItemBind, status, { id: CompletionVariant.wheelItemBind }); }
-
-    if (!(bind === 0 || bind === 1 || bind === 2 || bind === 3)) { return fail(Token.wheelItemBind, status, undefined); }
+    if (bind === null || !(bind === 0 || bind === 1 || bind === 2 || bind === 3)) { return fail(Token.wheelItemBind, status, { id: CompletionVariant.wheelItemBind }); }
 
     if (!eat(status, "|")) { return fail("|", status, undefined); }
 
@@ -764,8 +754,7 @@ function parseWheelCommand(status: ParseStatus): ParseItemSuccess | ParseFailure
 
     // All remaining commands take the position as next parameter
     const position = parseInteger(status);
-    if (position === null) { return fail(Token.wheelItemPosition, status, undefined); }
-    if (!([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ].includes(position))) { return fail(Token.wheelItemPosition, status, undefined); }
+    if (position === null || !([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ].includes(position))) { return fail(Token.wheelItemPosition, status, undefined); }
 
     // handle the command without further parts
     if (commandId === WheelCommandVariant.remove) {
@@ -800,7 +789,10 @@ function parseWheelCommand(status: ParseStatus): ParseItemSuccess | ParseFailure
         case WheelCommandVariant.setAction:
             subcommandResult = parseWheelSetAction(status, wheel, position);
             break;
-        default: return fail(Token.wheelCommandIdentifier, status, { id: CompletionVariant.wheelCommand });
+        default:
+            const errorStatus = status.clone();
+            errorStatus.offset -= 2;
+            return fail(Token.wheelCommandIdentifier, errorStatus, { id: CompletionVariant.wheelCommand });
     }
 
     if (!subcommandResult.success) { return subcommandResult; }
@@ -844,7 +836,10 @@ function parseShopCommand(status: ParseStatus): ParseItemSuccess | ParseFailure 
         case ShopCommandVariant.setIcon:
             subcommandResult = parseShopSetIcon(status);
             break;
-        default: return fail(Token.shopCommandIdentifier, status, { id: CompletionVariant.shopCommand });
+        default:
+            const errorStatus = status.clone();
+            errorStatus.offset -= 2;
+            return fail(Token.shopCommandIdentifier, errorStatus, { id: CompletionVariant.shopCommand });
     }
 
     if (!subcommandResult.success) { return subcommandResult; }
@@ -881,6 +876,9 @@ export function parseItem(status: ParseStatus): ParseItemSuccess | ParseFailure 
         case ItemVariant.progressMessage: return parseProgressMessage(status);
         case ItemVariant.wheelCommand: return parseWheelCommand(status);
         case ItemVariant.shopCommand: return parseShopCommand(status);
-        default: return fail(Token.itemIdentifier, status, { id: CompletionVariant.item });
+        default:
+            const errorStatus = status.clone();
+            errorStatus.offset -= 2;
+            return fail(Token.itemIdentifier, errorStatus, { id: CompletionVariant.item });
     }
 }

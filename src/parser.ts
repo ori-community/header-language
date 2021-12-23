@@ -274,8 +274,9 @@ function preprocessLine(status: ParseStatus): ParseFailure | undefined {
 
         const value = status.parameters.find(param => param.identifier === identifier)?.defaultValue;
         if (value === undefined) {
-            status.offset += index + 7;
-            return fail(Token.parameter, status, undefined);
+            const errorStatus = status.clone();
+            errorStatus.offset += index + 7;
+            return fail(Token.parameter, errorStatus, undefined);
         }
 
         status.remaining = remaining.slice(0, index) + value + remaining.slice(index + match[0].length);

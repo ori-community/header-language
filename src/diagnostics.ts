@@ -15,7 +15,6 @@ export function diagnose(document: vscode.TextDocument, parseFailure: ParseFailu
     const position = document.positionAt(parseFailure.status.offset);
     let range = document.getWordRangeAtPosition(position);
     if (range === undefined) { range = new vscode.Range(position, position); }
-    range = range.with(position);
 
     const message = errorMessage(parseFailure);
 

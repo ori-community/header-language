@@ -152,9 +152,13 @@ function parseParameterCommand(status: ParseStatus): ParseCommandSuccess | Parse
             break;
         } case "string": {
             const defaultValueResult = parseRemainingLine(status);
-            if (defaultValueResult === null) { defaultValue = ""; }
-            else { defaultValue = defaultValueResult; }
-        } default: return fail(Token.parameterType, status, { id: CompletionVariant.parameterType });
+            if (defaultValueResult === null) { return fail(Token.text, status, undefined); }
+            defaultValue = defaultValueResult;
+            break;
+        } default:
+            const errorStatus = status.clone();
+            errorStatus.offset -= 2;
+            return fail(Token.parameterType, errorStatus, { id: CompletionVariant.parameterType });
     }
 
     const parameter: Parameter = {
@@ -242,6 +246,9 @@ export function parseCommand(status: ParseStatus): ParseCommandSuccess | ParseFa
         case "addpool": return parseAddPoolCommand(status);
         case "set": return parseSetCommand(status);
         case "if": return parseIfCommand(status);
-        default: return fail(Token.commandIdentifier, status, { id: CompletionVariant.command });
+        default:
+            const errorStatus = status.clone();
+            errorStatus.offset -= 2;
+            return fail(Token.commandIdentifier, errorStatus, { id: CompletionVariant.command });
     }
 }
