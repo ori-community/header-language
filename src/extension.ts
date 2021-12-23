@@ -106,9 +106,8 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
     }
 
     while(true) {
-        if (status.remaining.length === 0) { break; }
-
         parseComment(status);
+        if (status.remaining.length === 0) { break; }
         if (parseLineBreak(status)) { continue; }
 
         const lineResult = parseLine(status);
