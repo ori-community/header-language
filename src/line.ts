@@ -5,6 +5,7 @@ import UberIdentifier from "./uberState/uberIdentifier";
 export enum LineVariant {
     pickup,
     command,
+    timer,
 }
 
 export interface Pickup {
@@ -21,5 +22,10 @@ export interface CommandLine {
     id: LineVariant.command,
     command: Command,
 }
+export interface TimerLine {
+    id: LineVariant.timer,
+    trigger: UberIdentifier,
+    timer: UberIdentifier,
+}
 
-export type Line = PickupLine | CommandLine;
+export type Line = PickupLine | CommandLine | TimerLine;

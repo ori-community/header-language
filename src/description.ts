@@ -300,10 +300,16 @@ function describeCommandLine(command: Command): string[] {
         `**Command**\n\n${commandDescription}`
     ];
 }
+function describeTimerLine(trigger: UberIdentifier, timer: UberIdentifier): string[] {
+    return [
+        `**Timer**\n\nBind a timer on ${trigger.group}|${trigger.id} to a toggle on ${timer.group}|${timer.id}`
+    ];
+}
 
 export function describeLine(line: Line): string[] {
     switch (line.id) {
         case LineVariant.pickup: return describePickup(line.pickup);
         case LineVariant.command: return describeCommandLine(line.command);
+        case LineVariant.timer: return describeTimerLine(line.trigger, line.timer);
     }
 }

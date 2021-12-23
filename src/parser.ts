@@ -3,6 +3,7 @@ import UberIdentifier from "./uberState/uberIdentifier";
 import { Completion, CompletionVariant } from "./completion";
 import { Line, LineVariant, Pickup } from "./line";
 import { parseCommand } from "./parser/parseCommand";
+import { AnnotationVariant } from "./annotation";
 
 export enum Token {
     integer,
@@ -41,6 +42,8 @@ export enum Token {
     commandIdentifier,
     path,
     parameterType,
+    annotation,
+    lineBreak,
 }
 
 export interface ParseSuccess<Result> {
@@ -70,15 +73,26 @@ export function fail(expected: Token | string, status: ParseStatus, completion: 
     };
 }
 
-export interface ParseStatus {
-    remaining: string,
+export class ParseStatus {
+    remaining: string;
+    offset: number;
+
+    constructor(input: string) {
+        this.remaining = input;
+        this.offset = 0;
+    }
+
+    progress(offset: number) {
+        this.remaining = this.remaining.slice(offset);
+        this.offset += offset;
+    }
 }
 
 export function eat(status: ParseStatus, eat: string): boolean {
     const remaining = status.remaining;
 
     if (remaining.startsWith(eat)) {
-        status.remaining = remaining.slice(eat.length);
+        status.progress(eat.length);
         return true;
     } else {
         return false;
@@ -91,7 +105,7 @@ function parseNumber(status: ParseStatus, regex: RegExp): number | null {
     const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    status.remaining = remaining.slice(match[0].length);
+    status.progress(match[0].length);
     return +match[0];
 }
 export function parseInteger(status: ParseStatus, signed: boolean = false): number | null {
@@ -109,6 +123,7 @@ export function parseFloat(status: ParseStatus): number | null {
 
     return parseNumber(status, regex);
 }
+// TODO these functions are very similar
 export function parseWord(status: ParseStatus): string | null {
     const regex = /^\w+/;
     const remaining = status.remaining;
@@ -116,18 +131,17 @@ export function parseWord(status: ParseStatus): string | null {
     const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    status.remaining = remaining.slice(match[0].length);
+    status.progress(match[0].length);
     return match[0];
 }
 export function parseBoolean(status: ParseStatus): boolean | null {
-    const remaining = status.remaining;
-
     const regex = /^true|false/;
+    const remaining = status.remaining;
 
     const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    status.remaining = remaining.slice(match[0].length);
+    status.progress(match[0].length);
     const boolean = match[0] === "true";
 
     return boolean;
@@ -139,8 +153,28 @@ export function parseRemainingLine(status: ParseStatus): string | null {
     const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    status.remaining = remaining.slice(match[0].length);
+    status.progress(match[0].length);
     return match[0];
+}
+export function parseComment(status: ParseStatus): boolean {
+    const regex = /^\s*?\/\/.*/;
+    const remaining = status.remaining;
+
+    const match = remaining.match(regex);
+    if (match === null) { return false; }
+
+    status.progress(match[0].length);
+    return true;
+}
+export function parseLineBreak(status: ParseStatus): boolean {
+    const regex = /^(\r\n|\r|\n|\z)/;
+    const remaining = status.remaining;
+
+    const match = remaining.match(regex);
+    if (match === null) { return false; }
+
+    status.progress(match[0].length);
+    return true;
 }
 
 type ParseUberIdentifierSuccess = ParseSuccess<UberIdentifier>;
@@ -212,9 +246,7 @@ function parsePickup(status: ParseStatus): ParsePickupSuccess | ParseFailure {
 }
 
 type ParseLineSuccess = ParseSuccess<Line>;
-export function parseLine(string: string): ParseLineSuccess | ParseFailure {
-    const status: ParseStatus = { remaining: string };
-
+export function parseLine(status: ParseStatus): ParseLineSuccess | ParseFailure {
     if (eat(status, "!!")) {
         const commandResult = parseCommand(status);
         if (!commandResult.success) { return commandResult; }
@@ -223,6 +255,28 @@ export function parseLine(string: string): ParseLineSuccess | ParseFailure {
         const line: Line = {
             id: LineVariant.command,
             command,
+        };
+
+        return succeed(line);
+    }
+
+    if (eat(status, "timer:")) {
+        eat(status, " ");
+
+        let uberIdentifierResult = parseUberIdentifier(status);
+        if (!uberIdentifierResult.success) { return uberIdentifierResult; }
+        const trigger = uberIdentifierResult.result;
+
+        if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.uberState }); }
+
+        uberIdentifierResult = parseUberIdentifier(status);
+        if (!uberIdentifierResult.success) { return uberIdentifierResult; }
+        const timer = uberIdentifierResult.result;
+
+        const line: Line = {
+            id: LineVariant.timer,
+            trigger,
+            timer,
         };
 
         return succeed(line);
@@ -238,4 +292,28 @@ export function parseLine(string: string): ParseLineSuccess | ParseFailure {
     };
 
     return succeed(line);
+}
+
+type ParseAnnotationsSuccess = ParseSuccess<AnnotationVariant[]>;
+export function parseAnnotation(status: ParseStatus): ParseAnnotationsSuccess | ParseFailure {
+    const annotations: AnnotationVariant[] = [];
+
+    while(true) {
+        if (!eat(status, "#")) { break; }
+
+        const identifier = parseWord(status);
+        if (identifier === null) { return fail(Token.word, status, undefined); }
+
+        switch(identifier) {
+            case "hide":
+                annotations.push(AnnotationVariant.hide);
+                break;
+            default:
+                return fail(Token.annotation, status, { id: CompletionVariant.annotation });
+        }
+
+        if (!parseLineBreak(status)) { return fail(Token.lineBreak, status, undefined); }
+    }
+
+    return succeed(annotations);
 }

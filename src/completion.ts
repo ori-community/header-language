@@ -31,6 +31,7 @@ import ZoneVariants from "./zone";
 import commandCompletions from "./completion/commandCompletion";
 import parameterTypeCompletions from "./completion/parameterTypeCompletion";
 import { ItemVariant } from "./item";
+import { AnnotationVariant } from "./annotation";
 
 export enum CompletionVariant {
     uberState,
@@ -64,6 +65,7 @@ export enum CompletionVariant {
     shopCommand,
     command,
     parameterType,
+    annotation,
 }
 
 interface UberState {
@@ -161,7 +163,10 @@ interface Command {
 interface ParameterType {
     id: CompletionVariant.parameterType,
 }
-export type Completion = UberState | UberId | Boolean | Item | Resource | Ability | Shard | SysCommand | Slot | Equipment | Keybind | Teleporter | MessageFlag | UberStateType | Water | BonusItem | BonusUpgrade | Zone | ProgressMessage | WheelCommand | IconType | ShardIconValue | SpellIconValue | OpherIconValue | LupoIconValue | GromIconValue | TuleyIconValue | WheelItemBind | ShopCommand | Command | ParameterType;
+interface Annotation {
+    id: CompletionVariant.annotation,
+}
+export type Completion = UberState | UberId | Boolean | Item | Resource | Ability | Shard | SysCommand | Slot | Equipment | Keybind | Teleporter | MessageFlag | UberStateType | Water | BonusItem | BonusUpgrade | Zone | ProgressMessage | WheelCommand | IconType | ShardIconValue | SpellIconValue | OpherIconValue | LupoIconValue | GromIconValue | TuleyIconValue | WheelItemBind | ShopCommand | Command | ParameterType | Annotation;
 
 export function offerCompletions(completion: Completion): CompletionItem[] {
     switch (completion.id) {
@@ -196,6 +201,7 @@ export function offerCompletions(completion: Completion): CompletionItem[] {
         case CompletionVariant.shopCommand: return getCompletions(ShopCommandVariant);
         case CompletionVariant.command: return commandCompletions;
         case CompletionVariant.parameterType: return parameterTypeCompletions;
+        case CompletionVariant.annotation: return getCompletions(AnnotationVariant);
         default:
             const safeguard: never = completion;
             return safeguard;

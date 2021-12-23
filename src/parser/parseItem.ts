@@ -509,7 +509,7 @@ function parseSetUberState(status: ParseStatus): ParseItemSuccess | ParseFailure
     const remaining = status.remaining;
     for (const type of [ "bool", "teleporter", "byte", "int", "float" ]) {
         if (remaining.startsWith(type)) {
-            status.remaining = remaining.slice(type.length);
+            status.progress(type.length);
             uberType = type as UberType;
             break;
         }

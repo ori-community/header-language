@@ -217,6 +217,9 @@ export function parseCommand(status: ParseStatus): ParseCommandSuccess | ParseFa
     const commandIdentifier = parseWord(status);
     if (commandIdentifier === null) { return fail(Token.commandIdentifier, status, { id: CompletionVariant.command }); }
 
+    if (commandIdentifier === "flush") { return succeed({ id: CommandVariant.flush }); }
+    if (commandIdentifier === "endif") { return succeed({ id: CommandVariant.endif }); }
+
     if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
 
     switch (commandIdentifier) {
@@ -231,10 +234,8 @@ export function parseCommand(status: ParseStatus): ParseCommandSuccess | ParseFa
         case "parameter": return parseParameterCommand(status);
         case "pool": return parsePoolCommand(status);
         case "addpool": return parseAddPoolCommand(status);
-        case "flush": return succeed({ id: CommandVariant.flush });
         case "set": return parseSetCommand(status);
         case "if": return parseIfCommand(status);
-        case "endif": return succeed({ id: CommandVariant.endif });
         default: return fail(Token.commandIdentifier, status, { id: CompletionVariant.command });
     }
 }
