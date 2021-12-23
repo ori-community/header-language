@@ -32,6 +32,16 @@ enum SpellIconVariant {
     "Drill" = 3003,
     "Double Jump" = 3004,
     "Flap" = 3005,
+    "Dash" = 4000,
+    "Bounce" = 4001,
+    "Glide" = 4002,
+    "ChargeJump" = 4003,
+    "WaterDash" = 4004,
+    "Climb" = 4005,
+    "WeaponCharge" = 4006,
+    "DamageUpgradeA" = 4007,
+    "DamageUpgradeB" = 4008,
+    "WaterBreath" = 4009,
 }
 
 export default SpellIconVariant;
