@@ -41,6 +41,7 @@ export enum Token {
     shopCommandIdentifier,
     commandIdentifier,
     path,
+    logicIdentifier,
     parameter,
     parameterType,
     annotation,
@@ -137,20 +138,7 @@ export function parseInteger(status: ParseStatus, signed: boolean = false): numb
     return parseNumber(status, regex);
 }
 export function parseFloat(status: ParseStatus): number | null {
-    const regex = /^-?\d+(?:\.\d+)?/;
-
-    return parseNumber(status, regex);
-}
-// TODO these functions are very similar
-export function parseWord(status: ParseStatus): string | null {
-    const regex = /^\w+/;
-    const remaining = status.remaining;
-
-    const match = remaining.match(regex);
-    if (match === null) { return null; }
-
-    status.progress(match[0].length);
-    return match[0];
+    return parseNumber(status, /^-?\d+(?:\.\d+)?/);
 }
 export function parseBoolean(status: ParseStatus): boolean | null {
     const regex = /^true|false/;
@@ -164,8 +152,7 @@ export function parseBoolean(status: ParseStatus): boolean | null {
 
     return boolean;
 }
-export function parseRemainingLine(status: ParseStatus): string | null {
-    const regex = /^.+/;
+export function parseString(status: ParseStatus, regex: RegExp): string | null {
     const remaining = status.remaining;
 
     const match = remaining.match(regex);
@@ -173,6 +160,15 @@ export function parseRemainingLine(status: ParseStatus): string | null {
 
     status.progress(match[0].length);
     return match[0];
+}
+export function parseWord(status: ParseStatus): string | null {
+    return parseString(status, /^\w+/);
+}
+export function parseLogicIdentifier(status: ParseStatus): string | null {
+    return parseString(status, /^\w+(\.\w+)?/);
+}
+export function parseRemainingLine(status: ParseStatus): string | null {
+    return parseString(status, /^.+/);
 }
 export function parseComment(status: ParseStatus): boolean {
     const regex = /^\s*?\/\/.*/;

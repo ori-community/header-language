@@ -1,6 +1,6 @@
 import { Command, CommandVariant } from "../command";
 import { CompletionVariant } from "../completion";
-import { eat, fail, Parameter, parseBoolean, ParseFailure, parseFloat, parseInteger, parseRemainingLine, ParseStatus, ParseSuccess, parseWord, succeed, Token } from "../parser";
+import { eat, fail, Parameter, parseBoolean, ParseFailure, parseFloat, parseInteger, parseLogicIdentifier, parseRemainingLine, ParseStatus, ParseSuccess, parseWord, succeed, Token } from "../parser";
 import parseIcon from "./parseIcon";
 import { parseItem } from "./parseItem";
 
@@ -193,8 +193,8 @@ function parseAddPoolCommand(status: ParseStatus): ParseCommandSuccess | ParseFa
     return succeed(command);
 }
 function parseSetCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
-    const state = parseWord(status);
-    if (state === null) { return fail(Token.word, status, undefined); }
+    const state = parseLogicIdentifier(status);
+    if (state === null) { return fail(Token.logicIdentifier, status, undefined); }
 
     const command: Command = {
         id: CommandVariant.set,
