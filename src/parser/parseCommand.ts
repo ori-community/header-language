@@ -1,19 +1,19 @@
 import { Command, CommandVariant } from "../command";
 import { CompletionVariant } from "../completion";
-import { eat, fail, parseBoolean, ParseFailure, parseFloat, parseInteger, parseRemainingLine, ParseStatus, ParseSuccess, parseWord, succeed, Token } from "../parser";
+import { eat, fail, Parameter, parseBoolean, ParseFailure, parseFloat, parseInteger, parseRemainingLine, ParseStatus, ParseSuccess, parseWord, succeed, Token } from "../parser";
 import parseIcon from "./parseIcon";
 import { parseItem } from "./parseItem";
 
 type ParseCommandSuccess = ParseSuccess<Command>;
 
 function parseAmount(status: ParseStatus): number | null {
-    const remaining = status.remaining;
+    const backup = status.clone();
 
     const amount = parseInteger(status);
     if (amount === null) { return null; }
 
     if (!eat(status, "x")) {
-        status.remaining = remaining;
+        status.replaceWith(backup);
         return null;
     }
 
@@ -157,10 +157,16 @@ function parseParameterCommand(status: ParseStatus): ParseCommandSuccess | Parse
         } default: return fail(Token.parameterType, status, { id: CompletionVariant.parameterType });
     }
 
+    const parameter: Parameter = {
+        identifier: parameterId,
+        defaultValue,
+    };
+
+    status.parameters.push(parameter);
+
     const command: Command = {
         id: CommandVariant.parameter,
-        parameterId,
-        defaultValue,
+        parameter,
     };
 
     return succeed(command);

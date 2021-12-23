@@ -1,5 +1,6 @@
 import Icon from "./icon";
 import { Item } from "./item";
+import { Parameter } from "./parser";
 
 export enum CommandVariant {
     include,
@@ -59,8 +60,7 @@ export interface IconCommand {
 }
 export interface ParameterCommand {
     id: CommandVariant.parameter,
-    parameterId: string,
-    defaultValue: boolean | number | string,
+    parameter: Parameter,
 }
 export interface PoolCommand {
     id: CommandVariant.pool,

@@ -41,6 +41,7 @@ export enum Token {
     shopCommandIdentifier,
     commandIdentifier,
     path,
+    parameter,
     parameterType,
     annotation,
     lineBreak,
@@ -73,18 +74,35 @@ export function fail(expected: Token | string, status: ParseStatus, completion: 
     };
 }
 
+export interface Parameter {
+    identifier: string,
+    defaultValue: boolean | number | string,
+}
+
 export class ParseStatus {
     remaining: string;
     offset: number;
+    parameters: Parameter[];
 
-    constructor(input: string) {
+    constructor(input: string, offset: number = 0, parameters: Parameter[] = []) {
         this.remaining = input;
-        this.offset = 0;
+        this.offset = offset;
+        this.parameters = parameters;
     }
 
     progress(offset: number) {
         this.remaining = this.remaining.slice(offset);
         this.offset += offset;
+    }
+
+    clone(): ParseStatus {
+        return new ParseStatus(this.remaining, this.offset, this.parameters);
+    }
+
+    replaceWith(other: ParseStatus) {
+        this.remaining = other.remaining;
+        this.offset = other.offset;
+        this.parameters = other.parameters;
     }
 }
 
@@ -245,8 +263,32 @@ function parsePickup(status: ParseStatus): ParsePickupSuccess | ParseFailure {
     return succeed(pickup);
 }
 
+function preprocessLine(status: ParseStatus): ParseFailure | undefined {
+    while (true) {
+        const remaining = status.remaining;
+
+        const match = remaining.match(/\$PARAM\((.*?)\)|\n|\r/);
+        if (match === null) { return undefined; }
+
+        const identifier = match[1];
+        const index = match.index;
+        if (identifier === undefined || index === undefined) { return undefined; }
+
+        const value = status.parameters.find(param => param.identifier === identifier)?.defaultValue;
+        if (value === undefined) {
+            status.offset += index + 7;
+            return fail(Token.parameter, status, undefined);
+        }
+
+        status.remaining = remaining.slice(0, index) + value + remaining.slice(index + match[0].length);
+    }
+}
+
 type ParseLineSuccess = ParseSuccess<Line>;
 export function parseLine(status: ParseStatus): ParseLineSuccess | ParseFailure {
+    const preprocessResult = preprocessLine(status);
+    if (preprocessResult !== undefined) { return preprocessResult; }
+
     if (eat(status, "!!")) {
         const commandResult = parseCommand(status);
         if (!commandResult.success) { return commandResult; }

@@ -284,8 +284,10 @@ function describeCommand(command: Command): string {
             const itemDescription = describeItem(command.item);
             const iconDescription = describeIcon(command.icon);
             return `Set the icon of this item to "${iconDescription}":\n\n${itemDescription}`;
-        } case CommandVariant.parameter: return `Add a parameter "${command.parameterId}" with default value "${command.defaultValue}"`;
-        case CommandVariant.pool: return `Add "${command.poolItem}" to the random pool`;
+        } case CommandVariant.parameter: {
+            const parameter = command.parameter;
+            return `Add a parameter "${parameter.identifier}" with default value "${parameter.defaultValue}"`;
+        } case CommandVariant.pool: return `Add "${command.poolItem}" to the random pool`;
         case CommandVariant.addpool: return `Add ${command.amount} random items from the random pool to the item pool`;
         case CommandVariant.flush: return "Flush the random pool";
         case CommandVariant.set: return `Sets the logic state "${command.state}" to be met`;
