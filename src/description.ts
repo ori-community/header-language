@@ -183,18 +183,18 @@ function describeItem(item: Item): string {
                 let lowerDescription: string;
                 if (typeof lower !== "object") {
                     lowerDescription = `${lower}`;
-                } if ("pointerIdentifier" in lower) {
+                } else if ("pointerIdentifier" in lower) {
                     const pointerDescription = describeUberState(lower.pointerIdentifier);
                     lowerDescription = `the value of ${pointerDescription}`;
                 } else {
                     console.warn("failed to describe uberSet value of: ", lower);
                     lowerDescription = "";
                 }
-                const upper = value.lower;
+                const upper = value.upper;
                 let upperDescription: string;
                 if (typeof upper !== "object") {
-                    upperDescription = `${lower}`;
-                } if ("pointerIdentifier" in lower) {
+                    upperDescription = `${upper}`;
+                } else if ("pointerIdentifier" in upper) {
                     const pointerDescription = describeUberState(upper.pointerIdentifier);
                     upperDescription = `the value of ${pointerDescription}`;
                 } else {
