@@ -21,7 +21,7 @@ import LupoIconVariant from "./icon/lupoIcon";
 import TuleyIconVariant from "./icon/tuleyIcon";
 import GromIconVariant from "./icon/gromIcon";
 import { ShopCommandVariant, ShopSubcommand } from "./item/shopCommand";
-import { Line, LineVariant, Pickup, PickupLine } from "./line";
+import { Line, LineVariant, Pickup } from "./line";
 import { Command, CommandVariant } from "./command";
 
 function describeUberState(uberIdentifier: UberIdentifier, uberValue?: number): string {
@@ -313,5 +313,7 @@ export function describeLine(line: Line): string[] {
         case LineVariant.pickup: return describePickup(line.pickup);
         case LineVariant.command: return describeCommandLine(line.command);
         case LineVariant.timer: return describeTimerLine(line.trigger, line.timer);
+        case LineVariant.flags:
+        case LineVariant.spawn: return [];
     }
 }

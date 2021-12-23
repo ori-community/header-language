@@ -15,7 +15,7 @@ function getNamesAndCodes(enumObject: Object): { name: string, code: string }[] 
     return namesAndCodes;
 }
 
-export function getCompletions(enumObject: Object): CompletionItem[] {
+export function getItemCompletions(enumObject: Object): CompletionItem[] {
     const namesAndCodes = getNamesAndCodes(enumObject);
 
     const nameCompletions: CompletionItem[] = namesAndCodes.map(({ name, code }) => {
@@ -33,4 +33,16 @@ export function getCompletions(enumObject: Object): CompletionItem[] {
     });
 
     return nameCompletions.concat(codeCompletions);
+}
+
+export function getNameCompletions(enumObject: Object): CompletionItem[] {
+    const namesAndCodes = getNamesAndCodes(enumObject);
+
+    const completions: CompletionItem[] = namesAndCodes.map(({ name, code }) => {
+        return {
+            label: name,
+        };
+    });
+
+    return completions;
 }

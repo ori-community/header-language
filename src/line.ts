@@ -6,6 +6,8 @@ export enum LineVariant {
     pickup,
     command,
     timer,
+    flags,
+    spawn,
 }
 
 export interface Pickup {
@@ -27,5 +29,11 @@ export interface TimerLine {
     trigger: UberIdentifier,
     timer: UberIdentifier,
 }
+export interface FlagLine {
+    id: LineVariant.flags,
+}
+export interface SpawnLine {
+    id: LineVariant.spawn,
+}
 
-export type Line = PickupLine | CommandLine | TimerLine;
+export type Line = PickupLine | CommandLine | TimerLine | FlagLine | SpawnLine;

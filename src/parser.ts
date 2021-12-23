@@ -46,6 +46,7 @@ export enum Token {
     parameterType,
     annotation,
     lineBreak,
+    flag,
 }
 
 export interface ParseSuccess<Result> {
@@ -316,6 +317,37 @@ export function parseLine(status: ParseStatus): ParseLineSuccess | ParseFailure 
             id: LineVariant.timer,
             trigger,
             timer,
+        };
+
+        return succeed(line);
+    }
+    if (eat(status, "Flags:")) {
+        do {
+            eat(status, " ");
+            const flag = parseWord(status);
+            if (flag === null) { return fail(Token.flag, status, { id: CompletionVariant.flag }); }
+        } while (eat(status, ","));
+
+        const line: Line = {
+            id: LineVariant.flags,
+        };
+
+        return succeed(line);
+    }
+    if (eat(status, "Spawn:")) {
+        eat(status, " ");
+
+        const x = parseFloat(status);
+        if (x === null) { return fail(Token.float, status, undefined); }
+
+        if (!eat(status, ",")) { return fail(",", status, undefined); }
+        eat(status, " ");
+
+        const y = parseFloat(status);
+        if (y === null) { return fail(Token.float, status, undefined); }
+
+        const line: Line = {
+            id: LineVariant.spawn,
         };
 
         return succeed(line);

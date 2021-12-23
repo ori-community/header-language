@@ -26,12 +26,13 @@ import { ShardVariant } from "./item/shard";
 import { ShopCommandVariant } from "./item/shopCommand";
 import { TeleporterVariant } from "./item/teleporter";
 import { WheelCommandVariant } from "./item/wheelCommand";
-import { getCompletions } from "./util";
+import { getItemCompletions, getNameCompletions } from "./util";
 import ZoneVariants from "./zone";
 import commandCompletions from "./completion/commandCompletion";
 import parameterTypeCompletions from "./completion/parameterTypeCompletion";
 import { ItemVariant } from "./item";
 import { AnnotationVariant } from "./annotation";
+import { FlagVariant } from "./flag";
 
 export enum CompletionVariant {
     uberState,
@@ -66,6 +67,7 @@ export enum CompletionVariant {
     command,
     parameterType,
     annotation,
+    flag,
 }
 
 interface UberState {
@@ -166,42 +168,46 @@ interface ParameterType {
 interface Annotation {
     id: CompletionVariant.annotation,
 }
-export type Completion = UberState | UberId | Boolean | Item | Resource | Ability | Shard | SysCommand | Slot | Equipment | Keybind | Teleporter | MessageFlag | UberStateType | Water | BonusItem | BonusUpgrade | Zone | ProgressMessage | WheelCommand | IconType | ShardIconValue | SpellIconValue | OpherIconValue | LupoIconValue | GromIconValue | TuleyIconValue | WheelItemBind | ShopCommand | Command | ParameterType | Annotation;
+interface Flag {
+    id: CompletionVariant.flag,
+}
+export type Completion = UberState | UberId | Boolean | Item | Resource | Ability | Shard | SysCommand | Slot | Equipment | Keybind | Teleporter | MessageFlag | UberStateType | Water | BonusItem | BonusUpgrade | Zone | ProgressMessage | WheelCommand | IconType | ShardIconValue | SpellIconValue | OpherIconValue | LupoIconValue | GromIconValue | TuleyIconValue | WheelItemBind | ShopCommand | Command | ParameterType | Annotation | Flag;
 
 export function offerCompletions(completion: Completion): CompletionItem[] {
     switch (completion.id) {
         case CompletionVariant.uberState: return uberStateCompletions;
         case CompletionVariant.uberId: return uberIdCompletions(completion.group);
         case CompletionVariant.boolean: return booleanCompletions;
-        case CompletionVariant.item: return getCompletions(ItemVariant);
-        case CompletionVariant.resource: return getCompletions(ResourceVariant);
-        case CompletionVariant.ability: return getCompletions(AbilityVariant);
-        case CompletionVariant.shard: return getCompletions(ShardVariant);
-        case CompletionVariant.sysCommand: return getCompletions(SysCommandVariant);
+        case CompletionVariant.item: return getItemCompletions(ItemVariant);
+        case CompletionVariant.resource: return getItemCompletions(ResourceVariant);
+        case CompletionVariant.ability: return getItemCompletions(AbilityVariant);
+        case CompletionVariant.shard: return getItemCompletions(ShardVariant);
+        case CompletionVariant.sysCommand: return getItemCompletions(SysCommandVariant);
         case CompletionVariant.slot: return slotCompletions;
-        case CompletionVariant.equipment: return getCompletions(EquipmentVariants);
+        case CompletionVariant.equipment: return getItemCompletions(EquipmentVariants);
         case CompletionVariant.keybind: return keybindCompletions;
-        case CompletionVariant.teleporter: return getCompletions(TeleporterVariant);
+        case CompletionVariant.teleporter: return getItemCompletions(TeleporterVariant);
         case CompletionVariant.messageFlag: return messageFlagCompletions;
         case CompletionVariant.uberStateType: return uberTypeCompletions;
         case CompletionVariant.water: return waterCompletions;
-        case CompletionVariant.bonusItem: return getCompletions(BonusItemVariant);
-        case CompletionVariant.bonusUpgrade: return getCompletions(BonusUpgradeVariant);
-        case CompletionVariant.zone: return getCompletions(ZoneVariants);
-        case CompletionVariant.progressMessage: return getCompletions(ProgressVariant);
-        case CompletionVariant.wheelCommand: return getCompletions(WheelCommandVariant);
+        case CompletionVariant.bonusItem: return getItemCompletions(BonusItemVariant);
+        case CompletionVariant.bonusUpgrade: return getItemCompletions(BonusUpgradeVariant);
+        case CompletionVariant.zone: return getItemCompletions(ZoneVariants);
+        case CompletionVariant.progressMessage: return getItemCompletions(ProgressVariant);
+        case CompletionVariant.wheelCommand: return getItemCompletions(WheelCommandVariant);
         case CompletionVariant.iconType: return iconTypeCompletions;
-        case CompletionVariant.shardIconValue: return getCompletions(ShardIconVariant);
-        case CompletionVariant.spellIconValue: return getCompletions(SpellIconVariant);
-        case CompletionVariant.opherIconValue: return getCompletions(OpherIconVariant);
-        case CompletionVariant.lupoIconValue: return getCompletions(LupoIconVariant);
-        case CompletionVariant.gromIconValue: return getCompletions(GromIconVariant);
-        case CompletionVariant.tuleyIconValue: return getCompletions(TuleyIconVariant);
+        case CompletionVariant.shardIconValue: return getItemCompletions(ShardIconVariant);
+        case CompletionVariant.spellIconValue: return getItemCompletions(SpellIconVariant);
+        case CompletionVariant.opherIconValue: return getItemCompletions(OpherIconVariant);
+        case CompletionVariant.lupoIconValue: return getItemCompletions(LupoIconVariant);
+        case CompletionVariant.gromIconValue: return getItemCompletions(GromIconVariant);
+        case CompletionVariant.tuleyIconValue: return getItemCompletions(TuleyIconVariant);
         case CompletionVariant.wheelItemBind: return wheelBindCompletions;
-        case CompletionVariant.shopCommand: return getCompletions(ShopCommandVariant);
+        case CompletionVariant.shopCommand: return getItemCompletions(ShopCommandVariant);
         case CompletionVariant.command: return commandCompletions;
         case CompletionVariant.parameterType: return parameterTypeCompletions;
-        case CompletionVariant.annotation: return getCompletions(AnnotationVariant);
+        case CompletionVariant.annotation: return getNameCompletions(AnnotationVariant);
+        case CompletionVariant.flag: return getNameCompletions(FlagVariant);
         default:
             const safeguard: never = completion;
             return safeguard;
