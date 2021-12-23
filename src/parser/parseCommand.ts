@@ -1,52 +1,43 @@
 import { Command, CommandVariant } from "../command";
 import { CompletionVariant } from "../completion";
-import { eat, fail, parseBoolean, ParseFailure, parseFloat, parseInteger, ParseSuccess, ParseValueSuccess, parseWord, succeed, Token } from "../parser";
+import { eat, fail, parseBoolean, ParseFailure, parseFloat, parseInteger, parseRemainingLine, ParseStatus, ParseSuccess, parseWord, succeed, Token } from "../parser";
 import parseIcon from "./parseIcon";
 import { parseItem } from "./parseItem";
 
 type ParseCommandSuccess = ParseSuccess<Command>;
 
-type ParseAmountSuccess = ParseValueSuccess<number>;
-function parseAmount(string: string): ParseAmountSuccess | null {
-    const amountResult = parseInteger(string);
-    if (amountResult === null) { return null; }
+function parseAmount(status: ParseStatus): number | null {
+    const remaining = status.remaining;
 
-    string = amountResult.remaining;
-    const amount = amountResult.value;
+    const amount = parseInteger(status);
+    if (amount === null) { return null; }
 
-    const xResult = eat(string, "x");
-    if (xResult === null) { return null; }
-    string = xResult;
-
-    return {
-        remaining: string,
-        value: amount,
-    };
-}
-
-function parseDependency(string: string, variant: CommandVariant.include | CommandVariant.exclude): ParseCommandSuccess | ParseFailure {
-    const command: Command = {
-        id: variant,
-        path: string,
-    };
-
-    return succeed(command, string);
-}
-function parseChangeItemPool(string: string, variant: CommandVariant.add | CommandVariant.remove): ParseCommandSuccess | ParseFailure {
-    let amount = 1;
-    const amountResult = parseAmount(string);
-    if (amountResult !== null) {
-        string = amountResult.remaining;
-        amount = amountResult.value;
-
-        const separatorResult = eat(string, " ");
-        if (separatorResult === null) { return fail(" ", string, undefined); }
-        string = separatorResult;
+    if (!eat(status, "x")) {
+        status.remaining = remaining;
+        return null;
     }
 
-    const itemResult = parseItem(string);
+    return amount;
+}
+
+function parseDependency(status: ParseStatus, variant: CommandVariant.include | CommandVariant.exclude): ParseCommandSuccess | ParseFailure {
+    const path = parseRemainingLine(status);
+    if (path === null) { return fail(Token.path, status, undefined); }
+
+    const command: Command = {
+        id: variant,
+        path,
+    };
+
+    return succeed(command);
+}
+function parseChangeItemPool(status: ParseStatus, variant: CommandVariant.add | CommandVariant.remove): ParseCommandSuccess | ParseFailure {
+    const amountResult = parseAmount(status);
+    if (amountResult !== null && !eat(status, " ")) { return fail(" ", status, undefined); }
+    const amount = amountResult || 1;
+
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
     const command: Command = {
@@ -55,58 +46,54 @@ function parseChangeItemPool(string: string, variant: CommandVariant.add | Comma
         item,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseNameCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const itemResult = parseItem(string);
+// TODO the below functions are very similar
+function parseNameCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
-    const separatorResult = eat(string, " ");
-    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
-    string = separatorResult;
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
+
+    const name = parseRemainingLine(status);
+    if (name === null) { return fail(Token.text, status, undefined); }
 
     const command: Command = {
         id: CommandVariant.name,
         item,
-        name: string,
+        name,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseDisplayCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const itemResult = parseItem(string);
+function parseDisplayCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
-    const separatorResult = eat(string, " ");
-    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
-    string = separatorResult;
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
+
+    const display = parseRemainingLine(status);
+    if (display === null) { return fail(Token.message, status, undefined); }
 
     const command: Command = {
         id: CommandVariant.display,
         item,
-        display: string,
+        display,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parsePriceCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const itemResult = parseItem(string);
+function parsePriceCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
-    const separatorResult = eat(string, " ");
-    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
-    string = separatorResult;
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
 
-    const priceResult = parseInteger(string);
-    if (priceResult === null) { return fail(Token.integer, string, undefined); }
-    string = priceResult.remaining;
-    const price = priceResult.value;
+    const price = parseInteger(status);
+    if (price === null) { return fail(Token.integer, status, undefined); }
 
     const command: Command = {
         id: CommandVariant.price,
@@ -114,21 +101,17 @@ function parsePriceCommand(string: string): ParseCommandSuccess | ParseFailure {
         price,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIconCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const itemResult = parseItem(string);
+function parseIconCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
-    const separatorResult = eat(string, " ");
-    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
-    string = separatorResult;
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
 
-    const iconResult = parseIcon(string);
+    const iconResult = parseIcon(status);
     if (!iconResult.success) { return iconResult; }
-    string = iconResult.remaining;
     const icon = iconResult.result;
 
     const command: Command = {
@@ -137,50 +120,41 @@ function parseIconCommand(string: string): ParseCommandSuccess | ParseFailure {
         icon,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseParameterCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const parameterIdResult = parseWord(string);
-    if (parameterIdResult === null) { return fail(Token.word, string, undefined); }
-    string = parameterIdResult.remaining;
-    const parameterId = parameterIdResult.value;
+function parseParameterCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const parameterId = parseWord(status);
+    if (parameterId === null) { return fail(Token.word, status, undefined); }
 
-    let separatorResult = eat(string, " ");
-    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
-    string = separatorResult;
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
 
-    const parameterTypeResult = parseWord(string);
-    if (parameterTypeResult === null) { return fail(Token.parameterType, string, undefined); }
-    string = parameterTypeResult.remaining;
-    const parameterType = parameterTypeResult.value;
+    const parameterType = parseWord(status);
+    if (parameterType === null) { return fail(Token.parameterType, status, undefined); }
 
-    separatorResult = eat(string, ":");
-    if (separatorResult === null) { return fail(":", string, { id: CompletionVariant.parameterType }); }
-    string = separatorResult;
+    if (!eat(status, ":")) { return fail(":", status, { id: CompletionVariant.parameterType }); }
 
     let defaultValue: boolean | number | string;
     switch (parameterType) {
         case "bool": {
-            const defaultValueResult = parseBoolean(string);
-            if (defaultValueResult === null) { return fail(Token.boolean, string, { id: CompletionVariant.boolean }); }
-            string = defaultValueResult.remaining;
-            defaultValue = defaultValueResult.value;
+            const defaultValueResult = parseBoolean(status);
+            if (defaultValueResult === null) { return fail(Token.boolean, status, { id: CompletionVariant.boolean }); }
+            defaultValue = defaultValueResult;
             break;
         } case "int": {
-            const defaultValueResult = parseInteger(string);
-            if (defaultValueResult === null) { return fail(Token.integer, string, undefined); }
-            string = defaultValueResult.remaining;
-            defaultValue = defaultValueResult.value;
+            const defaultValueResult = parseInteger(status);
+            if (defaultValueResult === null) { return fail(Token.integer, status, undefined); }
+            defaultValue = defaultValueResult;
             break;
         } case "float": {
-            const defaultValueResult = parseFloat(string);
-            if (defaultValueResult === null) { return fail(Token.float, string, undefined); }
-            string = defaultValueResult.remaining;
-            defaultValue = defaultValueResult.value;
+            const defaultValueResult = parseFloat(status);
+            if (defaultValueResult === null) { return fail(Token.float, status, undefined); }
+            defaultValue = defaultValueResult;
             break;
-        } case "string":
-            defaultValue = string;
-        default: return fail(Token.parameterType, string, { id: CompletionVariant.parameterType });
+        } case "string": {
+            const defaultValueResult = parseRemainingLine(status);
+            if (defaultValueResult === null) { defaultValue = ""; }
+            else { defaultValue = defaultValueResult; }
+        } default: return fail(Token.parameterType, status, { id: CompletionVariant.parameterType });
     }
 
     const command: Command = {
@@ -189,84 +163,78 @@ function parseParameterCommand(string: string): ParseCommandSuccess | ParseFailu
         defaultValue,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parsePoolCommand(string: string): ParseCommandSuccess | ParseFailure {
+function parsePoolCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const poolItem = parseRemainingLine(status);
+    if (poolItem === null) { return fail(Token.text, status, undefined); }
+
     const command: Command = {
         id: CommandVariant.pool,
-        poolItem: string,
+        poolItem,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseAddPoolCommand(string: string): ParseCommandSuccess | ParseFailure {
-    let amount = 1;
-    const amountResult = parseAmount(string);
-    if (amountResult !== null) {
-        string = amountResult.remaining;
-        amount = amountResult.value;
-    }
+function parseAddPoolCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const amount = parseAmount(status) || 1;
+
     const command: Command = {
         id: CommandVariant.addpool,
         amount,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseSetCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const stateResult = parseWord(string);
-    if (stateResult === null) { return fail(Token.word, string, undefined); }
-    string = stateResult.remaining;
-    const state = stateResult.value;
+function parseSetCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const state = parseWord(status);
+    if (state === null) { return fail(Token.word, status, undefined); }
 
     const command: Command = {
         id: CommandVariant.set,
         state,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIfCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const parameterIdResult = parseWord(string);
-    if (parameterIdResult === null) { return fail(Token.word, string, undefined); }
-    string = parameterIdResult.remaining;
-    const parameterId = parameterIdResult.value;
+function parseIfCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const parameterId = parseWord(status);
+    if (parameterId === null) { return fail(Token.word, status, undefined); }
+
+    const value = parseRemainingLine(status);
+    if (value === null) { return fail(Token.text, status, undefined); }
 
     const command: Command = {
         id: CommandVariant.if,
         parameterId,
-        value: string,
+        value,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
 
-export function parseCommand(string: string): ParseCommandSuccess | ParseFailure {
-    const commandIdentifierResult = parseWord(string);
-    if (commandIdentifierResult === null) { return fail(Token.commandIdentifier, string, { id: CompletionVariant.command }); }
-    string = commandIdentifierResult.remaining;
-    const commandIdentifier = commandIdentifierResult.value;
+export function parseCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const commandIdentifier = parseWord(status);
+    if (commandIdentifier === null) { return fail(Token.commandIdentifier, status, { id: CompletionVariant.command }); }
 
-    const separatorResult = eat(string, " ");
-    if (separatorResult === null) { return fail(" ", string, { id: CompletionVariant.command }); }
-    string = separatorResult;
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
 
     switch (commandIdentifier) {
-        case "include": return parseDependency(string, CommandVariant.include);
-        case "exclude": return parseDependency(string, CommandVariant.exclude);
-        case "add": return parseChangeItemPool(string, CommandVariant.add);
-        case "remove": return parseChangeItemPool(string, CommandVariant.remove);
-        case "name": return parseNameCommand(string);
-        case "display": return parseDisplayCommand(string);
-        case "price": return parsePriceCommand(string);
-        case "icon": return parseIconCommand(string);
-        case "parameter": return parseParameterCommand(string);
-        case "pool": return parsePoolCommand(string);
-        case "addpool": return parseAddPoolCommand(string);
-        case "flush": return succeed({ id: CommandVariant.flush }, string);
-        case "set": return parseSetCommand(string);
-        case "if": return parseIfCommand(string);
-        case "endif": return succeed({ id: CommandVariant.endif }, string);
-        default: return fail(Token.commandIdentifier, string, { id: CompletionVariant.command });
+        case "include": return parseDependency(status, CommandVariant.include);
+        case "exclude": return parseDependency(status, CommandVariant.exclude);
+        case "add": return parseChangeItemPool(status, CommandVariant.add);
+        case "remove": return parseChangeItemPool(status, CommandVariant.remove);
+        case "name": return parseNameCommand(status);
+        case "display": return parseDisplayCommand(status);
+        case "price": return parsePriceCommand(status);
+        case "icon": return parseIconCommand(status);
+        case "parameter": return parseParameterCommand(status);
+        case "pool": return parsePoolCommand(status);
+        case "addpool": return parseAddPoolCommand(status);
+        case "flush": return succeed({ id: CommandVariant.flush });
+        case "set": return parseSetCommand(status);
+        case "if": return parseIfCommand(status);
+        case "endif": return succeed({ id: CommandVariant.endif });
+        default: return fail(Token.commandIdentifier, status, { id: CompletionVariant.command });
     }
 }

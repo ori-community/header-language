@@ -13,42 +13,39 @@ import { ShopCommandVariant, ShopSubcommand } from "../item/shopCommand";
 import { TeleporterVariant } from "../item/teleporter";
 import { WheelCommandVariant, WheelSubcommand } from "../item/wheelCommand";
 import ZoneVariants from "../zone";
-import { eat, fail, parseBoolean, ParseFailure, parseFloat, parseInteger, ParseSuccess, parseUberIdentifier, ParseValueSuccess, parseWord, succeed, Token } from "../parser";
+import { eat, fail, parseBoolean, ParseFailure, parseFloat, parseInteger, parseRemainingLine, ParseStatus, ParseSuccess, parseUberIdentifier, parseWord, succeed, Token } from "../parser";
 import parseIcon from "./parseIcon";
 
 type ParseItemSuccess = ParseSuccess<Item>;
 
 function parseVariantItem(
-    string: string,
+    status: ParseStatus,
     variantEnum: Object,
     itemVariant: ItemVariant.resource | ItemVariant.bonusItem | ItemVariant.bonusUpgrade | ItemVariant.relic,
     completion: Completion,
     expected: Token
 ): ParseItemSuccess | ParseFailure {
-    const variantResult = parseInteger(string, true);
-    if (variantResult === null) { return fail(expected, string, completion); }
-    const variant = variantResult.value;
+    const variant = parseInteger(status, true);
+    if (variant === null) { return fail(expected, status, completion); }
 
-    if (!(variant in variantEnum)) { return fail(expected, string, completion); }
-    string = variantResult.remaining;
+    if (!(variant in variantEnum)) { return fail(expected, status, completion); }
 
     const item: Item = {
         id: itemVariant,
         variant,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
 function parseRemovableVariantItem(
-    string: string,
+    status: ParseStatus,
     variantEnum: Object,
     itemVariant: ItemVariant.ability | ItemVariant.shard | ItemVariant.teleporter,
     completion: Completion,
     expected: Token
 ): ParseItemSuccess | ParseFailure {
-    const variantResult = parseInteger(string, true);
-    if (variantResult === null) { return fail(expected, string, completion); }
-    let variant = variantResult.value;
+    let variant = parseInteger(status, true);
+    if (variant === null) { return fail(expected, status, completion); }
 
     let remove = false;
     if (variant < 0) {
@@ -56,8 +53,7 @@ function parseRemovableVariantItem(
         remove = true;
     }
 
-    if (!(variant in variantEnum)) { return fail(expected, string, completion); }
-    string = variantResult.remaining;
+    if (!(variant in variantEnum)) { return fail(expected, status, completion); }
 
     const item: Item = {
         id: itemVariant,
@@ -65,48 +61,40 @@ function parseRemovableVariantItem(
         remove,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
 
-function parseSpiritLight(string: string): ParseItemSuccess | ParseFailure {
-    const amountResult = parseInteger(string, true);
-    if (amountResult === null) { return fail(Token.integer, string, undefined); }
-    string = amountResult.remaining;
-    const amount = amountResult.value;
+function parseSpiritLight(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const amount = parseInteger(status, true);
+    if (amount === null) { return fail(Token.integer, status, undefined); }
 
     const item: Item = {
         id: ItemVariant.spiritLight,
         amount,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
-function parseResource(string: string): ParseItemSuccess | ParseFailure {
-    return parseVariantItem(string, ResourceVariant, ItemVariant.resource, { id: CompletionVariant.resource }, Token.resourceIdentifier);
+function parseResource(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseVariantItem(status, ResourceVariant, ItemVariant.resource, { id: CompletionVariant.resource }, Token.resourceIdentifier);
 }
-function parseAbility(string: string): ParseItemSuccess | ParseFailure {
-    return parseRemovableVariantItem(string, AbilityVariant, ItemVariant.ability, { id: CompletionVariant.ability }, Token.abilityIdentifier);
+function parseAbility(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseRemovableVariantItem(status, AbilityVariant, ItemVariant.ability, { id: CompletionVariant.ability }, Token.abilityIdentifier);
 }
-function parseShard(string: string): ParseItemSuccess | ParseFailure {
-    return parseRemovableVariantItem(string, ShardVariant, ItemVariant.shard, { id: CompletionVariant.shard }, Token.shardIdentifier);
+function parseShard(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseRemovableVariantItem(status, ShardVariant, ItemVariant.shard, { id: CompletionVariant.shard }, Token.shardIdentifier);
 }
 type ParseCommandSuccess = ParseSuccess<SysSubcommand>;
-function parseSetResource(string: string): ParseCommandSuccess | ParseFailure {
-    const resourceResult = parseInteger(string);
-    if (resourceResult === null) { return fail(Token.resourceIdentifier, string, { id: CompletionVariant.resource }); }
-    string = resourceResult.remaining;
-    const resource = resourceResult.value;
+function parseSetResource(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const resource = parseInteger(status);
+    if (resource === null) { return fail(Token.resourceIdentifier, status, { id: CompletionVariant.resource }); }
 
-    if (!(resource in ResourceVariant)) { return fail(Token.resourceIdentifier, string, { id: CompletionVariant.resource }); }
+    if (!(resource in ResourceVariant)) { return fail(Token.resourceIdentifier, status, { id: CompletionVariant.resource }); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.resource }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.resource }); }
 
-    const amountResult = parseInteger(string);
-    if (amountResult === null) { return fail(Token.integer, string, undefined); }
-    string = amountResult.remaining;
-    const amount = amountResult.value;
+    const amount = parseInteger(status);
+    if (amount === null) { return fail(Token.integer, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.setResource,
@@ -114,44 +102,31 @@ function parseSetResource(string: string): ParseCommandSuccess | ParseFailure {
         amount
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseKwolokStatue(string: string): ParseCommandSuccess | ParseFailure {
-    const zeroResult = eat(string, "0");
-    if (zeroResult === null) { return fail(Token.integer, string, undefined); }
-    string = zeroResult;
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+function parseKwolokStatue(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    if (!eat(status, "0")) { return fail(Token.integer, status, undefined); }
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const valueResult = parseInteger(string);
-    if (valueResult === null) { return fail(Token.integer, string, undefined); }
-    const value = valueResult.value;
-
-    if (![0, 1].includes(value)) { return fail(Token.integer, string, undefined); }
-    string = valueResult.remaining;
+    const value = parseInteger(status);
+    if (value === null) { return fail(Token.integer, status, undefined); }
+    if (![0, 1].includes(value)) { return fail(Token.integer, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.kwolokStatue,
         value,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseWarp(string: string): ParseCommandSuccess | ParseFailure {
-    const xResult = parseFloat(string);
-    if (xResult === null) { return fail(Token.float, string, undefined); }
-    string = xResult.remaining;
-    const x = xResult.value;
+function parseWarp(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const x = parseFloat(status);
+    if (x === null) { return fail(Token.float, status, undefined); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const yResult = parseFloat(string);
-    if (yResult === null) { return fail(Token.float, string, undefined); }
-    string = yResult.remaining;
-    const y = yResult.value;
+    const y = parseFloat(status);
+    if (y === null) { return fail(Token.float, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.warp,
@@ -159,22 +134,16 @@ function parseWarp(string: string): ParseCommandSuccess | ParseFailure {
         y,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseApplier(string: string): ParseCommandSuccess | ParseFailure {
-    const weirdResult = parseInteger(string);
-    if (weirdResult === null) { return fail(Token.integer, string, undefined); }
-    string = weirdResult.remaining;
-    const weird = weirdResult.value;
+function parseApplier(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const weird = parseInteger(status);
+    if (weird === null) { return fail(Token.integer, status, undefined); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const stuffResult = parseInteger(string);
-    if (stuffResult === null) { return fail(Token.integer, string, undefined); }
-    string = stuffResult.remaining;
-    const stuff = stuffResult.value;
+    const stuff = parseInteger(status);
+    if (stuff === null) { return fail(Token.integer, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.applier,
@@ -182,48 +151,40 @@ function parseApplier(string: string): ParseCommandSuccess | ParseFailure {
         stuff,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseSetCurrentResource(string: string, variant: SysCommandVariant.setHealth | SysCommandVariant.setEnergy | SysCommandVariant.setSpiritLight): ParseCommandSuccess | ParseFailure {
-    const amountResult = parseInteger(string);
-    if (amountResult === null) { return fail(Token.integer, string, undefined); }
-    string = amountResult.remaining;
-    const amount = amountResult.value;
+function parseSetCurrentResource(status: ParseStatus, variant: SysCommandVariant.setHealth | SysCommandVariant.setEnergy | SysCommandVariant.setSpiritLight): ParseCommandSuccess | ParseFailure {
+    const amount = parseInteger(status);
+    if (amount === null) { return fail(Token.integer, status, undefined); }
 
     const command: SysSubcommand = {
         id: variant,
         amount,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseSetHealth(string: string): ParseCommandSuccess | ParseFailure {
-    return parseSetCurrentResource(string, SysCommandVariant.setHealth);
+function parseSetHealth(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseSetCurrentResource(status, SysCommandVariant.setHealth);
 }
-function parseSetEnergy(string: string): ParseCommandSuccess | ParseFailure {
-    return parseSetCurrentResource(string, SysCommandVariant.setEnergy);
+function parseSetEnergy(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseSetCurrentResource(status, SysCommandVariant.setEnergy);
 }
-function parseSetSpiritLight(string: string): ParseCommandSuccess | ParseFailure {
-    return parseSetCurrentResource(string, SysCommandVariant.setSpiritLight);
+function parseSetSpiritLight(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseSetCurrentResource(status, SysCommandVariant.setSpiritLight);
 }
-function parseEquip(string: string): ParseCommandSuccess | ParseFailure {
-    const slotResult = parseInteger(string);
-    if (slotResult === null) { return fail(Token.slot, string, { id: CompletionVariant.slot }); }
-    string = slotResult.remaining;
-    const slot = slotResult.value;
+function parseEquip(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const slot = parseInteger(status);
+    if (slot === null) { return fail(Token.slot, status, { id: CompletionVariant.slot }); }
 
-    if (!(slot === 0 || slot === 1 || slot === 2)) { return fail(Token.slot, string, undefined); }
+    if (!(slot === 0 || slot === 1 || slot === 2)) { return fail(Token.slot, status, undefined); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const equipmentResult = parseInteger(string);
-    if (equipmentResult === null) { return fail(Token.equipment, string, { id: CompletionVariant.equipment }); }
-    string = equipmentResult.remaining;
-    const equipment = equipmentResult.value;
+    const equipment = parseInteger(status);
+    if (equipment === null) { return fail(Token.equipment, status, { id: CompletionVariant.equipment }); }
 
-    if (!(equipment in EquipmentVariants)) { return fail(Token.equipment, string, { id: CompletionVariant.equipment }); }
+    if (!(equipment in EquipmentVariants)) { return fail(Token.equipment, status, { id: CompletionVariant.equipment }); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.equip,
@@ -231,43 +192,33 @@ function parseEquip(string: string): ParseCommandSuccess | ParseFailure {
         equipment,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseTriggerBind(string: string): ParseCommandSuccess | ParseFailure {
-    const bindResult = parseWord(string);
-    if (bindResult === null) { return fail(Token.word, string, { id: CompletionVariant.keybind }); }
-    string = bindResult.remaining;
-    const bind = bindResult.value;
+function parseTriggerBind(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const bind = parseWord(status);
+    if (bind === null) { return fail(Token.word, status, { id: CompletionVariant.keybind }); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.triggerBind,
         bind,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIf(string: string, variant: SysCommandVariant.ifEqual | SysCommandVariant.ifGreater | SysCommandVariant.ifLess): ParseCommandSuccess | ParseFailure {
-    const uberIdentifierResult = parseUberIdentifier(string);
+function parseIf(status: ParseStatus, variant: SysCommandVariant.ifEqual | SysCommandVariant.ifGreater | SysCommandVariant.ifLess): ParseCommandSuccess | ParseFailure {
+    const uberIdentifierResult = parseUberIdentifier(status);
     if (!uberIdentifierResult.success) { return uberIdentifierResult; }
-    string = uberIdentifierResult.remaining;
     const uberIdentifier = uberIdentifierResult.result;
 
-    let separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.uberId, group: uberIdentifier.group }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.uberId, group: uberIdentifier.group }); }
 
-    const valueResult = parseFloat(string);
-    if (valueResult === null) { return fail(Token.float, string, undefined); }
-    string = valueResult.remaining;
-    const value = valueResult.value;
+    const value = parseFloat(status);
+    if (value === null) { return fail(Token.float, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const itemResult = parseItem(string);
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
     const command: SysSubcommand = {
@@ -277,21 +228,20 @@ function parseIf(string: string, variant: SysCommandVariant.ifEqual | SysCommand
         item,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIfEqual(string: string): ParseCommandSuccess | ParseFailure {
-    return parseIf(string, SysCommandVariant.ifEqual);
+function parseIfEqual(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseIf(status, SysCommandVariant.ifEqual);
 }
-function parseIfGreater(string: string): ParseCommandSuccess | ParseFailure {
-    return parseIf(string, SysCommandVariant.ifGreater);
+function parseIfGreater(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseIf(status, SysCommandVariant.ifGreater);
 }
-function parseIfLess(string: string): ParseCommandSuccess | ParseFailure {
-    return parseIf(string, SysCommandVariant.ifLess);
+function parseIfLess(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseIf(status, SysCommandVariant.ifLess);
 }
-function parseToggleSync(string: string, variant: SysCommandVariant.disableSync | SysCommandVariant.enableSync): ParseCommandSuccess | ParseFailure {
-    const uberIdentifierResult = parseUberIdentifier(string);
+function parseToggleSync(status: ParseStatus, variant: SysCommandVariant.disableSync | SysCommandVariant.enableSync): ParseCommandSuccess | ParseFailure {
+    const uberIdentifierResult = parseUberIdentifier(status);
     if (!uberIdentifierResult.success) { return uberIdentifierResult; }
-    string = uberIdentifierResult.remaining;
     const uberIdentifier = uberIdentifierResult.result;
 
     const command: SysSubcommand = {
@@ -299,37 +249,27 @@ function parseToggleSync(string: string, variant: SysCommandVariant.disableSync 
         uberIdentifier,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseDisableSync(string: string): ParseCommandSuccess | ParseFailure {
-    return parseToggleSync(string, SysCommandVariant.disableSync);
+function parseDisableSync(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseToggleSync(status, SysCommandVariant.disableSync);
 }
-function parseEnableSync(string: string): ParseCommandSuccess | ParseFailure {
-    return parseToggleSync(string, SysCommandVariant.enableSync);
+function parseEnableSync(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseToggleSync(status, SysCommandVariant.enableSync);
 }
-function parseCreateWarpIcon(string: string): ParseCommandSuccess | ParseFailure {
-    const warpIdResult = parseInteger(string);
-    if (warpIdResult === null) { return fail(Token.integer, string, undefined); }
-    string = warpIdResult.remaining;
-    const warpId = warpIdResult.value;
+function parseCreateWarpIcon(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const warpId = parseInteger(status);
+    if (warpId === null) { return fail(Token.integer, status, undefined); }
 
-    let separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const xResult = parseFloat(string);
-    if (xResult === null) { return fail(Token.float, string, undefined); }
-    string = xResult.remaining;
-    const x = xResult.value;
+    const x = parseFloat(status);
+    if (x === null) { return fail(Token.float, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const yResult = parseFloat(string);
-    if (yResult === null) { return fail(Token.float, string, undefined); }
-    string = yResult.remaining;
-    const y = yResult.value;
+    const y = parseFloat(status);
+    if (y === null) { return fail(Token.float, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.createWarpIcon,
@@ -338,61 +278,42 @@ function parseCreateWarpIcon(string: string): ParseCommandSuccess | ParseFailure
         y,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseDestroyWarpIcon(string: string): ParseCommandSuccess | ParseFailure {
-    const warpIdResult = parseInteger(string);
-    if (warpIdResult === null) { return fail(Token.integer, string, undefined); }
-    string = warpIdResult.remaining;
-    const warpId = warpIdResult.value;
+function parseDestroyWarpIcon(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const warpId = parseInteger(status);
+    if (warpId === null) { return fail(Token.integer, status, undefined); }
 
     const command: SysSubcommand = {
         id: SysCommandVariant.destroyWarpIcon,
         warpId,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIfBounds(string: string): ParseCommandSuccess | ParseFailure {
-    const x1Result = parseFloat(string);
-    if (x1Result === null) { return fail(Token.float, string, undefined); }
-    string = x1Result.remaining;
-    const x1 = x1Result.value;
+function parseIfBounds(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const x1 = parseFloat(status);
+    if (x1 === null) { return fail(Token.float, status, undefined); }
 
-    let separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const y1Result = parseFloat(string);
-    if (y1Result === null) { return fail(Token.float, string, undefined); }
-    string = y1Result.remaining;
-    const y1 = y1Result.value;
+    const y1 = parseFloat(status);
+    if (y1 === null) { return fail(Token.float, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const x2Result = parseFloat(string);
-    if (x2Result === null) { return fail(Token.float, string, undefined); }
-    string = x2Result.remaining;
-    const x2 = x2Result.value;
+    const x2 = parseFloat(status);
+    if (x2 === null) { return fail(Token.float, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const y2Result = parseFloat(string);
-    if (y2Result === null) { return fail(Token.float, string, undefined); }
-    string = y2Result.remaining;
-    const y2 = y2Result.value;
+    const y2 = parseFloat(status);
+    if (y2 === null) { return fail(Token.float, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const itemResult = parseItem(string);
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
     const command: SysSubcommand = {
@@ -404,21 +325,16 @@ function parseIfBounds(string: string): ParseCommandSuccess | ParseFailure {
         item,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIfSelf(string: string, variant: SysCommandVariant.ifSelfEqual | SysCommandVariant.ifSelfGreater | SysCommandVariant.ifSelfLess): ParseCommandSuccess | ParseFailure {
-    const valueResult = parseFloat(string);
-    if (valueResult === null) { return fail(Token.float, string, undefined); }
-    string = valueResult.remaining;
-    const value = valueResult.value;
+function parseIfSelf(status: ParseStatus, variant: SysCommandVariant.ifSelfEqual | SysCommandVariant.ifSelfGreater | SysCommandVariant.ifSelfLess): ParseCommandSuccess | ParseFailure {
+    const value = parseFloat(status);
+    if (value === null) { return fail(Token.float, status, undefined); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const itemResult = parseItem(string);
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
     const command: SysSubcommand = {
@@ -427,22 +343,45 @@ function parseIfSelf(string: string, variant: SysCommandVariant.ifSelfEqual | Sy
         item,
     };
 
-    return succeed(command, string);
+    return succeed(command);
 }
-function parseIfSelfEqual(string: string): ParseCommandSuccess | ParseFailure {
-    return parseIfSelf(string, SysCommandVariant.ifSelfEqual);
+function parseIfSelfEqual(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseIfSelf(status, SysCommandVariant.ifSelfEqual);
 }
-function parseIfSelfGreater(string: string): ParseCommandSuccess | ParseFailure {
-    return parseIfSelf(string, SysCommandVariant.ifSelfGreater);
+function parseIfSelfGreater(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseIfSelf(status, SysCommandVariant.ifSelfGreater);
 }
-function parseIfSelfLess(string: string): ParseCommandSuccess | ParseFailure {
-    return parseIfSelf(string, SysCommandVariant.ifSelfLess);
+function parseIfSelfLess(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    return parseIfSelf(status, SysCommandVariant.ifSelfLess);
 }
-function parseCommand(string: string): ParseItemSuccess | ParseFailure {
-    const commandIdResult = parseInteger(string);
-    if (commandIdResult === null) { return fail(Token.sysCommandIdentifier, string, { id: CompletionVariant.sysCommand }); }
-    string = commandIdResult.remaining;
-    const commandId = commandIdResult.value;
+function parseSubcommand(status: ParseStatus, commandId: number): ParseCommandSuccess | ParseFailure {
+    switch (commandId) {
+        case SysCommandVariant.setResource: return parseSetResource(status);
+        case SysCommandVariant.kwolokStatue: return parseKwolokStatue(status);
+        case SysCommandVariant.warp: return parseWarp(status);
+        case SysCommandVariant.applier: return parseApplier(status);
+        case SysCommandVariant.setHealth: return parseSetHealth(status);
+        case SysCommandVariant.setEnergy: return parseSetEnergy(status);
+        case SysCommandVariant.setSpiritLight: return parseSetSpiritLight(status);
+        case SysCommandVariant.equip: return parseEquip(status);
+        case SysCommandVariant.triggerBind: return parseTriggerBind(status);
+        case SysCommandVariant.ifEqual: return parseIfEqual(status);
+        case SysCommandVariant.ifGreater: return parseIfGreater(status);
+        case SysCommandVariant.ifLess: return parseIfLess(status);
+        case SysCommandVariant.disableSync: return parseDisableSync(status);
+        case SysCommandVariant.enableSync: return parseEnableSync(status);
+        case SysCommandVariant.createWarpIcon: return parseCreateWarpIcon(status);
+        case SysCommandVariant.destroyWarpIcon: return parseDestroyWarpIcon(status);
+        case SysCommandVariant.ifBounds: return parseIfBounds(status);
+        case SysCommandVariant.ifSelfEqual: return parseIfSelfEqual(status);
+        case SysCommandVariant.ifSelfGreater: return parseIfSelfGreater(status);
+        case SysCommandVariant.ifSelfLess: return parseIfSelfLess(status);
+        default: return fail(Token.sysCommandIdentifier, status, { id: CompletionVariant.sysCommand });
+    }
+}
+function parseCommand(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const commandId = parseInteger(status);
+    if (commandId === null) { return fail(Token.sysCommandIdentifier, status, { id: CompletionVariant.sysCommand }); }
 
     // handle the commands without further parts
     if (commandId === SysCommandVariant.autosave || commandId === SysCommandVariant.checkpoint) {
@@ -453,177 +392,98 @@ function parseCommand(string: string): ParseItemSuccess | ParseFailure {
             },
         };
 
-        return succeed(item, string);
+        return succeed(item);
     }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.sysCommand }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.sysCommand }); }
 
-    let subcommandResult: ParseCommandSuccess | ParseFailure;
-    switch (commandId) {
-        case SysCommandVariant.setResource:
-            subcommandResult = parseSetResource(string);
-            break;
-        case SysCommandVariant.kwolokStatue:
-            subcommandResult = parseKwolokStatue(string);
-            break;
-        case SysCommandVariant.warp:
-            subcommandResult = parseWarp(string);
-            break;
-        case SysCommandVariant.applier:
-            subcommandResult = parseApplier(string);
-            break;
-        case SysCommandVariant.setHealth:
-            subcommandResult = parseSetHealth(string);
-            break;
-        case SysCommandVariant.setEnergy:
-            subcommandResult = parseSetEnergy(string);
-            break;
-        case SysCommandVariant.setSpiritLight:
-            subcommandResult = parseSetSpiritLight(string);
-            break;
-        case SysCommandVariant.equip:
-            subcommandResult = parseEquip(string);
-            break;
-        case SysCommandVariant.triggerBind:
-            subcommandResult = parseTriggerBind(string);
-            break;
-        case SysCommandVariant.ifEqual:
-            subcommandResult = parseIfEqual(string);
-            break;
-        case SysCommandVariant.ifGreater:
-            subcommandResult = parseIfGreater(string);
-            break;
-        case SysCommandVariant.ifLess:
-            subcommandResult = parseIfLess(string);
-            break;
-        case SysCommandVariant.disableSync:
-            subcommandResult = parseDisableSync(string);
-            break;
-        case SysCommandVariant.enableSync:
-            subcommandResult = parseEnableSync(string);
-            break;
-        case SysCommandVariant.createWarpIcon:
-            subcommandResult = parseCreateWarpIcon(string);
-            break;
-        case SysCommandVariant.destroyWarpIcon:
-            subcommandResult = parseDestroyWarpIcon(string);
-            break;
-        case SysCommandVariant.ifBounds:
-            subcommandResult = parseIfBounds(string);
-            break;
-        case SysCommandVariant.ifSelfEqual:
-            subcommandResult = parseIfSelfEqual(string);
-            break;
-        case SysCommandVariant.ifSelfGreater:
-            subcommandResult = parseIfSelfGreater(string);
-            break;
-        case SysCommandVariant.ifSelfLess:
-            subcommandResult = parseIfSelfLess(string);
-            break;
-        default: return fail(Token.sysCommandIdentifier, string, { id: CompletionVariant.sysCommand });
-    }
-
+    const subcommandResult = parseSubcommand(status, commandId);
     if (!subcommandResult.success) { return subcommandResult; }
-
-    string = subcommandResult.remaining;
     const subcommand = subcommandResult.result;
+
     const item: Item = {
         id: ItemVariant.sysCommand,
         subcommand,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
-function parseTeleporter(string: string): ParseItemSuccess | ParseFailure {
-    return parseRemovableVariantItem(string, TeleporterVariant, ItemVariant.teleporter, { id: CompletionVariant.teleporter }, Token.teleporterIdentifier);
+function parseTeleporter(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseRemovableVariantItem(status, TeleporterVariant, ItemVariant.teleporter, { id: CompletionVariant.teleporter }, Token.teleporterIdentifier);
 }
-function parseMessage(string: string): ParseItemSuccess | ParseFailure {
+function parseMessage(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const message = parseRemainingLine(status);
+    if (message === null) { return fail(Token.message, status, undefined); }
+
     const item: Item = {
         id: ItemVariant.message,
-        message: string,  // TODO this proper
+        message,  // TODO this proper
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
 type ParsePointerSuccess = ParseSuccess<SetPointer>;
-function parsePointer(string: string): ParsePointerSuccess | ParseFailure | null {
-    const openResult = eat(string, "$(");
-    if (openResult === null) { return null; }
-    string = openResult;
+function parsePointer(status: ParseStatus): ParsePointerSuccess | ParseFailure | null {
+    if (!eat(status, "$(")) { return null; }
 
-    const uberIdentifierResult = parseUberIdentifier(string);
+    const uberIdentifierResult = parseUberIdentifier(status);
     if (!uberIdentifierResult.success) { return uberIdentifierResult; }
-    string = uberIdentifierResult.remaining;
     const pointerIdentifier = uberIdentifierResult.result;
 
-    const closeResult = eat(string, ")");
-    if (closeResult === null) { return fail(")", string, { id: CompletionVariant.uberId, group: pointerIdentifier.group }); }
-    string = closeResult;
+    if (!eat(status, ")")) { return fail(")", status, { id: CompletionVariant.uberId, group: pointerIdentifier.group }); }
 
+    // TODO why manual?
     return {
         success: true,
-        remaining: string,
         result: { pointerIdentifier },
     };
 }
 type ParseSetValueOrPointerSuccess<Value> = ParseSuccess<Value | SetPointer>;
-function parseSetValueOrPointer<Value>(string: string, parseValue: (string: string) => ParseValueSuccess<Value> | null, expected: Token, completion: Completion | undefined): ParseSetValueOrPointerSuccess<Value> | ParseFailure {
-    const pointerResult = parsePointer(string);
+function parseSetValueOrPointer<Value>(status: ParseStatus, parseValue: (status: ParseStatus) => Value | null, expected: Token, completion: Completion | undefined): ParseSetValueOrPointerSuccess<Value> | ParseFailure {
+    const pointerResult = parsePointer(status);
     if (pointerResult !== null) {
         if (!pointerResult.success) { return pointerResult; }
-        string = pointerResult.remaining;
         const value = pointerResult.result;
-        return succeed(value, string);
+        return succeed(value);
     }
 
-    const valueResult = parseValue(string);
-    if (valueResult === null) { return fail(expected, string, completion); }
-    string = valueResult.remaining;
-    const value = valueResult.value;
+    const value = parseValue(status);
+    if (value === null) { return fail(expected, status, completion); }
 
-    return succeed(value, string);
+    return succeed(value);
 }
 type ParseSetRangeSuccess<Value> = ParseSuccess<SetRange<Value>>;
-function parseSetRange<Value>(string: string, parseValue: (string: string) => ParseValueSuccess<Value> | null, expected: Token, completion: Completion | undefined): ParseSetRangeSuccess<Value> | ParseFailure {
-    const lowerResult = parseSetValueOrPointer(string, parseValue, expected, completion);
+function parseSetRange<Value>(status: ParseStatus, parseValue: (status: ParseStatus) => Value | null, expected: Token, completion: Completion | undefined): ParseSetRangeSuccess<Value> | ParseFailure {
+    const lowerResult = parseSetValueOrPointer(status, parseValue, expected, completion);
     if (!lowerResult.success) { return lowerResult; }
-    string = lowerResult.remaining;
     const lower = lowerResult.result;
 
-    const separatorResult = eat(string, ",");
-    if (separatorResult === null) {
+    if (!eat(status, ",")) {
         let lowerCompletion: Completion | undefined;
         if ("pointerIdentifier" in lower) {
             lowerCompletion = { id: CompletionVariant.uberId, group: lower.pointerIdentifier.group };
         } else {
             lowerCompletion = completion;
         }
-        return fail(",", string, lowerCompletion);
+        return fail(",", status, lowerCompletion);
     }
-    string = separatorResult;
 
-    const upperResult = parseSetValueOrPointer(string, parseValue, expected, completion);
+    const upperResult = parseSetValueOrPointer(status, parseValue, expected, completion);
     if (!upperResult.success) { return upperResult; }
-    string = upperResult.remaining;
     const upper = upperResult.result;
 
-    const closeResult = eat(string, "]");
-    if (closeResult === null) {
+    if (!eat(status, "]")) {
         let upperCompletion: Completion | undefined;
         if ("pointerIdentifier" in upper) {
             upperCompletion = { id: CompletionVariant.uberId, group: upper.pointerIdentifier.group };
         } else {
             upperCompletion = completion;
         }
-        return fail("]", string, upperCompletion);
+        return fail("]", status, upperCompletion);
     }
-    string = closeResult;
 
     return {
         success: true,
-        remaining: string,
         result: {
             lower,
             upper,
@@ -631,86 +491,65 @@ function parseSetRange<Value>(string: string, parseValue: (string: string) => Pa
     };
 }
 type ParseSetValueSuccess<Value> = ParseSuccess<Value | SetPointer | SetRange<Value>>;
-function parseSetValue<Value>(string: string, parseValue: (string: string) => ParseValueSuccess<Value> | null, expected: Token, completion: Completion | undefined): ParseSetValueSuccess<Value> | ParseFailure {
-    const openRangeResult = eat(string, "[");
-    if (openRangeResult !== null) {
-        string = openRangeResult;
-        return parseSetRange(string, parseValue, expected, completion );
+function parseSetValue<Value>(status: ParseStatus, parseValue: (status: ParseStatus) => Value | null, expected: Token, completion: Completion | undefined): ParseSetValueSuccess<Value> | ParseFailure {
+    if (eat(status, "[")) {
+        return parseSetRange(status, parseValue, expected, completion );
     }
-    return parseSetValueOrPointer(string, parseValue, expected, completion);
+    return parseSetValueOrPointer(status, parseValue, expected, completion);
 }
-function parseSetUberState(string: string): ParseItemSuccess | ParseFailure {
-    const uberIdentifierResult = parseUberIdentifier(string);
+function parseSetUberState(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const uberIdentifierResult = parseUberIdentifier(status);
     if (!uberIdentifierResult.success) { return uberIdentifierResult; }
-    string = uberIdentifierResult.remaining;
     const uberIdentifier = uberIdentifierResult.result;
 
-    let separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.uberId, group: uberIdentifier.group }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.uberId, group: uberIdentifier.group }); }
 
     type UberType = "bool" | "teleporter" | "byte" | "int" | "float";
     let uberType: UberType | undefined;
+    const remaining = status.remaining;
     for (const type of [ "bool", "teleporter", "byte", "int", "float" ]) {
-        if (string.startsWith(type)) {
-            string = string.slice(type.length);
+        if (remaining.startsWith(type)) {
+            status.remaining = remaining.slice(type.length);
             uberType = type as UberType;
             break;
         }
     }
-    if (uberType === undefined) { return fail(Token.uberStateType, string, { id: CompletionVariant.uberStateType }); }
+    if (uberType === undefined) { return fail(Token.uberStateType, status, { id: CompletionVariant.uberStateType }); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail(Token.uberStateType, string, { id: CompletionVariant.uberStateType }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail(Token.uberStateType, status, { id: CompletionVariant.uberStateType }); }
 
     let sign: boolean | undefined;
-    const addResult = eat(string, "+");
-    if (addResult !== null) {
-        string = addResult;
+    if (eat(status, "+")) {
         sign = true;
-    } else {
-        const removeResult = eat(string, "-");
-        if (removeResult !== null) {
-            string = removeResult;
-            sign = false;
-        }
+    } else if (eat(status, "-")) {
+        sign = false;
     }
 
     let valueResult;
     switch (uberType) {
         case "bool":
         case "teleporter":
-            valueResult = parseSetValue<boolean>(string, parseBoolean, Token.boolean, { id: CompletionVariant.boolean });
+            valueResult = parseSetValue<boolean>(status, parseBoolean, Token.boolean, { id: CompletionVariant.boolean });
             break;
         case "byte":
         case "int":
-            valueResult = parseSetValue<number>(string, parseInteger, Token.integer, undefined);
+            valueResult = parseSetValue<number>(status, parseInteger, Token.integer, undefined);
             break;
         case "float":
-            valueResult = parseSetValue<number>(string, parseFloat, Token.float, undefined);
+            valueResult = parseSetValue<number>(status, parseFloat, Token.float, undefined);
             break;
     }
 
     if (!valueResult.success) { return valueResult; }
-    string = valueResult.remaining;
     const value = valueResult.result;
 
     let skip = 0;
-    separatorResult = eat(string, "|");
-    if (separatorResult !== null) {
-        string = separatorResult;
+    if (eat(status, "|")) {
+        eat(status, "skip=");
 
-        const skipKeyResult = eat(string, "skip=");
-        if (skipKeyResult !== null) {
-            string = skipKeyResult;
-        }
-
-        const skipResult = parseInteger(string);
-        if (skipResult === null) { return fail(Token.integer, string, undefined); }
-        string = skipResult.remaining;
-
-        skip = skipResult.value;
+        const skipResult = parseInteger(status);
+        if (skipResult === null) { return fail(Token.integer, status, undefined); }
+        skip = skipResult;
     }
 
     const item: Item = {
@@ -724,36 +563,32 @@ function parseSetUberState(string: string): ParseItemSuccess | ParseFailure {
         skip,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
-function parseWater(string: string): ParseItemSuccess | ParseFailure {
-    const waterResult = parseInteger(string);
-    if (waterResult === null) { return fail(Token.water, string, { id: CompletionVariant.water }); }
-    string = waterResult.remaining;
-    const water = waterResult.value;
+function parseWater(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const water = parseInteger(status);
+    if (water === null) { return fail(Token.water, status, { id: CompletionVariant.water }); }
 
-    if (water !== 0) { return fail(Token.water, string, undefined); }
+    if (water !== 0) { return fail(Token.water, status, undefined); }
 
     const item: Item = {
         id: ItemVariant.water,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
-function parseBonusItem(string: string): ParseItemSuccess | ParseFailure {
-    return parseVariantItem(string, BonusItemVariant, ItemVariant.bonusItem, { id: CompletionVariant.bonusItem }, Token.bonusItem);
+function parseBonusItem(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseVariantItem(status, BonusItemVariant, ItemVariant.bonusItem, { id: CompletionVariant.bonusItem }, Token.bonusItem);
 }
-function parseBonusUpgrade(string: string): ParseItemSuccess | ParseFailure {
-    return parseVariantItem(string, BonusUpgradeVariant, ItemVariant.bonusUpgrade, { id: CompletionVariant.bonusUpgrade }, Token.bonusUpgrade);
+function parseBonusUpgrade(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseVariantItem(status, BonusUpgradeVariant, ItemVariant.bonusUpgrade, { id: CompletionVariant.bonusUpgrade }, Token.bonusUpgrade);
 }
-function parseRelic(string: string): ParseItemSuccess | ParseFailure {
-    return parseVariantItem(string, ZoneVariants, ItemVariant.relic, { id: CompletionVariant.zone }, Token.zone);
+function parseRelic(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    return parseVariantItem(status, ZoneVariants, ItemVariant.relic, { id: CompletionVariant.zone }, Token.zone);
 }
-function parseProgressMessage(string: string): ParseItemSuccess | ParseFailure {
-    const progressIdResult = parseInteger(string);
-    if (progressIdResult === null) { return fail(Token.progressIdentifier, string, { id: CompletionVariant.progressMessage }); }
-    string = progressIdResult.remaining;
-    const progressId = progressIdResult.value;
+function parseProgressMessage(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const progressId = parseInteger(status);
+    if (progressId === null) { return fail(Token.progressIdentifier, status, { id: CompletionVariant.progressMessage }); }
 
     const id = ItemVariant.progressMessage;
 
@@ -769,18 +604,14 @@ function parseProgressMessage(string: string): ParseItemSuccess | ParseFailure {
                 progressVariant,
             };
 
-            return succeed(item, string);
+            return succeed(item);
         } case ProgressVariant.zoneRelic: {
-            const separatorResult = eat(string, "|");
-            if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.sysCommand }); }
-            string = separatorResult;
+            if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.sysCommand }); }
 
-            const zoneResult = parseInteger(string, true);
-            if (zoneResult === null) { return fail(Token.zone, string, { id: CompletionVariant.zone }); }
-            string = zoneResult.remaining;
-            const zone = zoneResult.value;
+            const zone = parseInteger(status, true);
+            if (zone === null) { return fail(Token.zone, status, { id: CompletionVariant.zone }); }
 
-            if (!(zone in ZoneVariants)) { return fail(Token.zone, string, { id: CompletionVariant.zone }); }
+            if (!(zone in ZoneVariants)) { return fail(Token.zone, status, { id: CompletionVariant.zone }); }
 
             const item: Item = {
                 id,
@@ -790,25 +621,27 @@ function parseProgressMessage(string: string): ParseItemSuccess | ParseFailure {
                 },
             };
 
-            return succeed(item, string);
-        } default: return fail(Token.progressIdentifier, string, { id: CompletionVariant.progressMessage });
+            return succeed(item);
+        } default: return fail(Token.progressIdentifier, status, { id: CompletionVariant.progressMessage });
     }
 }
 type ParseWheelCommandSuccess = ParseSuccess<WheelSubcommand>;
-function parseWheelSetText(string: string, wheel: number, position: number, variant: WheelCommandVariant.setText | WheelCommandVariant.setDescription): ParseWheelCommandSuccess | ParseFailure {
+function parseWheelSetText(status: ParseStatus, wheel: number, position: number, variant: WheelCommandVariant.setText | WheelCommandVariant.setDescription): ParseWheelCommandSuccess | ParseFailure {
+    const text = parseRemainingLine(status);
+    if (text === null) { return fail(Token.message, status, undefined); }
+
     const subcommand: WheelSubcommand = {
         id: variant,
         wheel,
         position,
-        text: string,  // TODO this proper
+        text,  // TODO this proper
     };
 
-    return succeed(subcommand, string);
+    return succeed(subcommand);
 }
-function parseWheelSetIcon(string: string, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
-    const iconResult = parseIcon(string);
+function parseWheelSetIcon(status: ParseStatus, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
+    const iconResult = parseIcon(status);
     if (!iconResult.success) { return iconResult; }
-    string = iconResult.remaining;
     const icon = iconResult.result;
 
     const subcommand: WheelSubcommand = {
@@ -818,40 +651,26 @@ function parseWheelSetIcon(string: string, wheel: number, position: number): Par
         icon,
     };
 
-    return succeed(subcommand, string);
+    return succeed(subcommand);
 }
-function parseWheelSetColor(string: string, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
-    const redResult = parseInteger(string);
-    if (redResult === null) { return fail(Token.integer, string, undefined); }
-    string = redResult.remaining;
-    const red = redResult.value;
+function parseWheelSetColor(status: ParseStatus, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
+    const red = parseInteger(status);
+    if (red === null) { return fail(Token.integer, status, undefined); }
 
-    let separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const greenResult = parseInteger(string);
-    if (greenResult === null) { return fail(Token.integer, string, undefined); }
-    string = greenResult.remaining;
-    const green = greenResult.value;
+    const green = parseInteger(status);
+    if (green === null) { return fail(Token.integer, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const blueResult = parseInteger(string);
-    if (blueResult === null) { return fail(Token.integer, string, undefined); }
-    string = blueResult.remaining;
-    const blue = blueResult.value;
+    const blue = parseInteger(status);
+    if (blue === null) { return fail(Token.integer, status, undefined); }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const alphaResult = parseInteger(string);
-    if (alphaResult === null) { return fail(Token.integer, string, undefined); }
-    string = alphaResult.remaining;
-    const alpha = alphaResult.value;
+    const alpha = parseInteger(status);
+    if (alpha === null) { return fail(Token.integer, status, undefined); }
 
     const subcommand: WheelSubcommand = {
         id: WheelCommandVariant.setColor,
@@ -863,23 +682,18 @@ function parseWheelSetColor(string: string, wheel: number, position: number): Pa
         alpha,
     };
 
-    return succeed(subcommand, string);
+    return succeed(subcommand);
 }
-function parseWheelSetAction(string: string, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
-    const bindResult = parseInteger(string);
-    if (bindResult === null) { return fail(Token.wheelItemBind, string, { id: CompletionVariant.wheelItemBind }); }
-    string = bindResult.remaining;
-    const bind = bindResult.value;
+function parseWheelSetAction(status: ParseStatus, wheel: number, position: number): ParseWheelCommandSuccess | ParseFailure {
+    const bind = parseInteger(status);
+    if (bind === null) { return fail(Token.wheelItemBind, status, { id: CompletionVariant.wheelItemBind }); }
 
-    if (!(bind === 0 || bind === 1 || bind === 2 || bind === 3)) { return fail(Token.wheelItemBind, string, undefined); }
+    if (!(bind === 0 || bind === 1 || bind === 2 || bind === 3)) { return fail(Token.wheelItemBind, status, undefined); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
-    const itemResult = parseItem(string);
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
     const subcommand: WheelSubcommand = {
@@ -890,13 +704,11 @@ function parseWheelSetAction(string: string, wheel: number, position: number): P
         item,
     };
 
-    return succeed(subcommand, string);
+    return succeed(subcommand);
 }
-function parseWheelCommand(string: string): ParseItemSuccess | ParseFailure {
-    const commandIdResult = parseInteger(string);
-    if (commandIdResult === null) { return fail(Token.wheelCommandIdentifier, string, { id: CompletionVariant.wheelCommand }); }
-    string = commandIdResult.remaining;
-    const commandId = commandIdResult.value;
+function parseWheelCommand(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const commandId = parseInteger(status);
+    if (commandId === null) { return fail(Token.wheelCommandIdentifier, status, { id: CompletionVariant.wheelCommand }); }
 
     const id = ItemVariant.wheelCommand;
 
@@ -909,18 +721,14 @@ function parseWheelCommand(string: string): ParseItemSuccess | ParseFailure {
             },
         };
 
-        return succeed(item, string);
+        return succeed(item);
     }
 
-    let separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.wheelCommand }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.wheelCommand }); }
 
     // All remaining commands take the wheel as first parameter
-    const wheelResult = parseInteger(string);
-    if (wheelResult === null) { return fail(Token.integer, string, undefined); }
-    string = wheelResult.remaining;
-    const wheel = wheelResult.value;
+    const wheel = parseInteger(status);
+    if (wheel === null) { return fail(Token.integer, status, undefined); }
 
     // handle the command without further parts
     if (commandId === WheelCommandVariant.switch) {
@@ -932,19 +740,15 @@ function parseWheelCommand(string: string): ParseItemSuccess | ParseFailure {
             }
         };
 
-        return succeed(item, string);
+        return succeed(item);
     }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
     // handle the command that doesn't take the position as next parameter
     if (commandId === WheelCommandVariant.setSticky) {
-        const booleanResult = parseBoolean(string);
-        if (booleanResult === null) { return fail(Token.boolean, string, { id: CompletionVariant.boolean }); }
-        string = booleanResult.remaining;
-        const sticky = booleanResult.value;
+        const sticky = parseBoolean(status);
+        if (sticky === null) { return fail(Token.boolean, status, { id: CompletionVariant.boolean }); }
 
         const item: Item = {
             id: ItemVariant.wheelCommand,
@@ -955,16 +759,13 @@ function parseWheelCommand(string: string): ParseItemSuccess | ParseFailure {
             }
         };
 
-        return succeed(item, string);
+        return succeed(item);
     }
 
     // All remaining commands take the position as next parameter
-    const positionResult = parseInteger(string);
-    if (positionResult === null) { return fail(Token.wheelItemPosition, string, undefined); }
-    const position = positionResult.value;
-
-    if (!([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ].includes(position))) { return fail(Token.wheelItemPosition, string, undefined); }
-    string = positionResult.remaining;
+    const position = parseInteger(status);
+    if (position === null) { return fail(Token.wheelItemPosition, status, undefined); }
+    if (!([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ].includes(position))) { return fail(Token.wheelItemPosition, status, undefined); }
 
     // handle the command without further parts
     if (commandId === WheelCommandVariant.remove) {
@@ -977,58 +778,51 @@ function parseWheelCommand(string: string): ParseItemSuccess | ParseFailure {
             }
         };
 
-        return succeed(item, string);
+        return succeed(item);
     }
 
-    separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, undefined); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
 
     let subcommandResult: ParseWheelCommandSuccess | ParseFailure;
     switch (commandId) {
         case WheelCommandVariant.setText:
-            subcommandResult = parseWheelSetText(string, wheel, position, WheelCommandVariant.setText);
+            subcommandResult = parseWheelSetText(status, wheel, position, WheelCommandVariant.setText);
             break;
         case WheelCommandVariant.setDescription:
-            subcommandResult = parseWheelSetText(string, wheel, position, WheelCommandVariant.setDescription);
+            subcommandResult = parseWheelSetText(status, wheel, position, WheelCommandVariant.setDescription);
             break;
         case WheelCommandVariant.setIcon:
-            subcommandResult = parseWheelSetIcon(string, wheel, position);
+            subcommandResult = parseWheelSetIcon(status, wheel, position);
             break;
         case WheelCommandVariant.setColor:
-            subcommandResult = parseWheelSetColor(string, wheel, position);
+            subcommandResult = parseWheelSetColor(status, wheel, position);
             break;
         case WheelCommandVariant.setAction:
-            subcommandResult = parseWheelSetAction(string, wheel, position);
+            subcommandResult = parseWheelSetAction(status, wheel, position);
             break;
-        default: return fail(Token.wheelCommandIdentifier, string, { id: CompletionVariant.wheelCommand });
+        default: return fail(Token.wheelCommandIdentifier, status, { id: CompletionVariant.wheelCommand });
     }
 
     if (!subcommandResult.success) { return subcommandResult; }
-
-    string = subcommandResult.remaining;
     const subcommand = subcommandResult.result;
+
     const item: Item = {
         id: ItemVariant.wheelCommand,
         subcommand,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
 type ParseShopCommandSuccess = ParseSuccess<ShopSubcommand>;
-function parseShopSetIcon(string: string): ParseShopCommandSuccess | ParseFailure {
-    const uberIdentifierResult = parseUberIdentifier(string);
+function parseShopSetIcon(status: ParseStatus): ParseShopCommandSuccess | ParseFailure {
+    const uberIdentifierResult = parseUberIdentifier(status);
     if (!uberIdentifierResult.success) { return uberIdentifierResult; }
-    string = uberIdentifierResult.remaining;
     const uberIdentifier = uberIdentifierResult.result;
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.sysCommand }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.sysCommand }); }
 
-    const iconResult = parseIcon(string);
+    const iconResult = parseIcon(status);
     if (!iconResult.success) { return iconResult; }
-    string = iconResult.remaining;
     const icon = iconResult.result;
 
     const subcommand: ShopSubcommand = {
@@ -1037,65 +831,56 @@ function parseShopSetIcon(string: string): ParseShopCommandSuccess | ParseFailur
         icon,
     };
 
-    return succeed(subcommand, string);
+    return succeed(subcommand);
 }
-function parseShopCommand(string: string): ParseItemSuccess | ParseFailure {
-    const commandIdResult = parseInteger(string);
-    if (commandIdResult === null) { return fail(Token.shopCommandIdentifier, string, { id: CompletionVariant.shopCommand }); }
-    string = commandIdResult.remaining;
-    const commandId = commandIdResult.value;
+function parseShopCommand(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const commandId = parseInteger(status);
+    if (commandId === null) { return fail(Token.shopCommandIdentifier, status, { id: CompletionVariant.shopCommand }); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.sysCommand }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.sysCommand }); }
 
     let subcommandResult: ParseShopCommandSuccess | ParseFailure;
     switch (commandId) {
         case ShopCommandVariant.setIcon:
-            subcommandResult = parseShopSetIcon(string);
+            subcommandResult = parseShopSetIcon(status);
             break;
-        default: return fail(Token.shopCommandIdentifier, string, { id: CompletionVariant.shopCommand });
+        default: return fail(Token.shopCommandIdentifier, status, { id: CompletionVariant.shopCommand });
     }
 
     if (!subcommandResult.success) { return subcommandResult; }
-
-    string = subcommandResult.remaining;
     const subcommand = subcommandResult.result;
+
     const item: Item = {
         id: ItemVariant.shopCommand,
         subcommand,
     };
 
-    return succeed(item, string);
+    return succeed(item);
 }
 
-export function parseItem(string: string): ParseItemSuccess | ParseFailure {
-    const itemIdResult = parseInteger(string);
-    if (itemIdResult === null) { return fail(Token.itemIdentifier, string, { id: CompletionVariant.item }); }
-    string = itemIdResult.remaining;
-    const itemId = itemIdResult.value;
+export function parseItem(status: ParseStatus): ParseItemSuccess | ParseFailure {
+    const itemId = parseInteger(status);
+    if (itemId === null) { return fail(Token.itemIdentifier, status, { id: CompletionVariant.item }); }
 
     // Each item has at least two parts, so parsing the separator here is just more efficient
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.item }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.item }); }
 
     switch (itemId) {
-        case ItemVariant.spiritLight: return parseSpiritLight(string);
-        case ItemVariant.resource: return parseResource(string);
-        case ItemVariant.ability: return parseAbility(string);
-        case ItemVariant.shard: return parseShard(string);
-        case ItemVariant.sysCommand: return parseCommand(string);
-        case ItemVariant.teleporter: return parseTeleporter(string);
-        case ItemVariant.message: return parseMessage(string);
-        case ItemVariant.setUberState: return parseSetUberState(string);
-        case ItemVariant.water: return parseWater(string);
-        case ItemVariant.bonusItem: return parseBonusItem(string);
-        case ItemVariant.bonusUpgrade: return parseBonusUpgrade(string);
-        case ItemVariant.relic: return parseRelic(string);
-        case ItemVariant.progressMessage: return parseProgressMessage(string);
-        case ItemVariant.wheelCommand: return parseWheelCommand(string);
-        case ItemVariant.shopCommand: return parseShopCommand(string);
-        default: return fail(Token.itemIdentifier, string, { id: CompletionVariant.item });
+        case ItemVariant.spiritLight: return parseSpiritLight(status);
+        case ItemVariant.resource: return parseResource(status);
+        case ItemVariant.ability: return parseAbility(status);
+        case ItemVariant.shard: return parseShard(status);
+        case ItemVariant.sysCommand: return parseCommand(status);
+        case ItemVariant.teleporter: return parseTeleporter(status);
+        case ItemVariant.message: return parseMessage(status);
+        case ItemVariant.setUberState: return parseSetUberState(status);
+        case ItemVariant.water: return parseWater(status);
+        case ItemVariant.bonusItem: return parseBonusItem(status);
+        case ItemVariant.bonusUpgrade: return parseBonusUpgrade(status);
+        case ItemVariant.relic: return parseRelic(status);
+        case ItemVariant.progressMessage: return parseProgressMessage(status);
+        case ItemVariant.wheelCommand: return parseWheelCommand(status);
+        case ItemVariant.shopCommand: return parseShopCommand(status);
+        default: return fail(Token.itemIdentifier, status, { id: CompletionVariant.item });
     }
 }

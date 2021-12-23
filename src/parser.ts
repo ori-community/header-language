@@ -8,6 +8,7 @@ export enum Token {
     integer,
     float,
     word,
+    text,
     boolean,
     uberGroup,
     uberId,
@@ -19,6 +20,7 @@ export enum Token {
     slot,
     equipment,
     teleporterIdentifier,
+    message,
     uberStateType,
     water,
     bonusItem,
@@ -37,18 +39,17 @@ export enum Token {
     wheelItemBind,
     shopCommandIdentifier,
     commandIdentifier,
+    path,
     parameterType,
 }
 
 export interface ParseSuccess<Result> {
     success: true,
-    remaining: string,
     result: Result,
 }
-export function succeed<Result>(result: Result, remaining: string): ParseSuccess<Result> {
+export function succeed<Result>(result: Result): ParseSuccess<Result> {
     return {
         success: true,
-        remaining,
         result,
     };
 }
@@ -56,46 +57,44 @@ export function succeed<Result>(result: Result, remaining: string): ParseSuccess
 export interface ParseFailure {
     success: false,
     expected: Token | string,
-    found: string,
+    status: ParseStatus,
     completion?: Completion,
 }
 
-export function fail(expected: Token | string, found: string, completion: Completion | undefined): ParseFailure {
+export function fail(expected: Token | string, status: ParseStatus, completion: Completion | undefined): ParseFailure {
     return {
         success: false,
         expected,
-        found,
+        status,
         completion,
     };
 }
 
-export function eat(string: string, eat: string): string | null {
-    if (string.startsWith(eat)) {
-        return string.slice(eat.length);
+export interface ParseStatus {
+    remaining: string,
+}
+
+export function eat(status: ParseStatus, eat: string): boolean {
+    const remaining = status.remaining;
+
+    if (remaining.startsWith(eat)) {
+        status.remaining = remaining.slice(eat.length);
+        return true;
     } else {
-        return null;
+        return false;
     }
 }
 
-export interface ParseValueSuccess<Value> {
-    remaining: string,
-    value: Value,
-}
+function parseNumber(status: ParseStatus, regex: RegExp): number | null {
+    const remaining = status.remaining;
 
-type ParseNumberSuccess = ParseValueSuccess<number>;
-function parseNumber(string: string, regex: RegExp): ParseNumberSuccess | null {
-    const match = string.match(regex);
+    const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    const remaining = string.slice(match[0].length);
-    const number = +match[0];
-
-    return {
-        remaining,
-        value: number,
-    };
+    status.remaining = remaining.slice(match[0].length);
+    return +match[0];
 }
-export function parseInteger(string: string, signed: boolean = false): ParseNumberSuccess | null {
+export function parseInteger(status: ParseStatus, signed: boolean = false): number | null {
     let regex;
     if (signed) {
         regex = /^-?\d+/;
@@ -103,59 +102,56 @@ export function parseInteger(string: string, signed: boolean = false): ParseNumb
         regex = /^\d+/;
     }
 
-    return parseNumber(string, regex);
+    return parseNumber(status, regex);
 }
-export function parseFloat(string: string): ParseNumberSuccess | null {
+export function parseFloat(status: ParseStatus): number | null {
     const regex = /^-?\d+(?:\.\d+)?/;
 
-    return parseNumber(string, regex);
+    return parseNumber(status, regex);
 }
-type ParseWordSuccess = ParseValueSuccess<string>;
-export function parseWord(string: string): ParseWordSuccess | null {
+export function parseWord(status: ParseStatus): string | null {
     const regex = /^\w+/;
+    const remaining = status.remaining;
 
-    const match = string.match(regex);
+    const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    const remaining = string.slice(match[0].length);
-    const word = match[0];
-
-    return {
-        remaining,
-        value: word,
-    };
+    status.remaining = remaining.slice(match[0].length);
+    return match[0];
 }
-type ParseBooleanSuccess = ParseValueSuccess<boolean>;
-export function parseBoolean(string: string): ParseBooleanSuccess | null {
+export function parseBoolean(status: ParseStatus): boolean | null {
+    const remaining = status.remaining;
+
     const regex = /^true|false/;
 
-    const match = string.match(regex);
+    const match = remaining.match(regex);
     if (match === null) { return null; }
 
-    const remaining = string.slice(match[0].length);
+    status.remaining = remaining.slice(match[0].length);
     const boolean = match[0] === "true";
 
-    return {
-        remaining,
-        value: boolean,
-    };
+    return boolean;
+}
+export function parseRemainingLine(status: ParseStatus): string | null {
+    const regex = /^.+/;
+    const remaining = status.remaining;
+
+    const match = remaining.match(regex);
+    if (match === null) { return null; }
+
+    status.remaining = remaining.slice(match[0].length);
+    return match[0];
 }
 
 type ParseUberIdentifierSuccess = ParseSuccess<UberIdentifier>;
-export function parseUberIdentifier(string: string): ParseUberIdentifierSuccess | ParseFailure {
-    const groupResult = parseInteger(string);
-    if (groupResult === null) { return fail(Token.uberGroup, string, { id: CompletionVariant.uberState }); }
-    string = groupResult.remaining;
-    const group = groupResult.value;
+export function parseUberIdentifier(status: ParseStatus): ParseUberIdentifierSuccess | ParseFailure {
+    const group = parseInteger(status);
+    if (group === null) { return fail(Token.uberGroup, status, { id: CompletionVariant.uberState }); }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) { return fail("|", string, { id: CompletionVariant.uberState }); }
-    string = separatorResult;
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.uberState }); }
 
-    const idResult = parseInteger(string);
-    if (idResult === null) { return fail(Token.uberId, string, { id: CompletionVariant.uberId, group }); }
-    string = idResult.remaining;
-    const id = idResult.value;
+    const id = parseInteger(status);
+    if (id === null) { return fail(Token.uberId, status, { id: CompletionVariant.uberId, group }); }
 
     const uberIdentifier = {
         group,
@@ -164,60 +160,46 @@ export function parseUberIdentifier(string: string): ParseUberIdentifierSuccess 
 
     return {
         success: true,
-        remaining: string,
         result: uberIdentifier,
     };
 }
 
 type ParseUberValueSuccess = ParseSuccess<number>;
-function parseUberValue(string: string): ParseUberValueSuccess | ParseFailure {
-    const valueResult = parseInteger(string);
-    if (valueResult === null) { return fail(Token.integer, string, undefined); }
-    string = valueResult.remaining;
-    const value = valueResult.value;
+function parseUberValue(status: ParseStatus): ParseUberValueSuccess | ParseFailure {
+    const value = parseInteger(status);
+    if (value === null) { return fail(Token.integer, status, undefined); }
 
     return {
         success: true,
-        remaining: string,
         result: value,
     };
 }
 
 type ParsePickupSuccess = ParseSuccess<Pickup>;
-function parsePickup(string: string): ParsePickupSuccess | ParseFailure {
-    if (string.startsWith("!")) {
-        string = string.slice(1);
-    }
+function parsePickup(status: ParseStatus): ParsePickupSuccess | ParseFailure {
+    eat(status, "!");
 
-    const uberIdentifierResult = parseUberIdentifier(string);
+    const uberIdentifierResult = parseUberIdentifier(status);
     if (!uberIdentifierResult.success) { return uberIdentifierResult; }
-    string = uberIdentifierResult.remaining;
     const uberIdentifier = uberIdentifierResult.result;
 
     let uberValue;
-    const equalSignResult = eat(string, "=");
-    if (equalSignResult !== null) {
-        string = equalSignResult;
-
-        const uberValueResult = parseUberValue(string);
+    if (eat(status, "=")) {
+        const uberValueResult = parseUberValue(status);
         if (!uberValueResult.success) { return uberValueResult; }
-        string = uberValueResult.remaining;
         uberValue = uberValueResult.result;
     }
 
-    const separatorResult = eat(string, "|");
-    if (separatorResult === null) {
+    if (!eat(status, "|")) {
         let completion: Completion | undefined;
         if (uberValue === undefined) {
             completion = { id: CompletionVariant.uberId, group: uberIdentifier.group };
         }
-        return fail("|", string, completion);
+        return fail("|", status, completion);
     }
-    string = separatorResult;
 
-    const itemResult = parseItem(string);
+    const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
-    string = itemResult.remaining;
     const item = itemResult.result;
 
     const pickup: Pickup = {
@@ -226,18 +208,16 @@ function parsePickup(string: string): ParsePickupSuccess | ParseFailure {
         item,
     };
 
-    return succeed(pickup, string);
+    return succeed(pickup);
 }
 
 type ParseLineSuccess = ParseSuccess<Line>;
 export function parseLine(string: string): ParseLineSuccess | ParseFailure {
-    const commandSymbolResult = eat(string, "!!");
-    if (commandSymbolResult !== null) {
-        string = commandSymbolResult;
+    const status: ParseStatus = { remaining: string };
 
-        const commandResult = parseCommand(string);
+    if (eat(status, "!!")) {
+        const commandResult = parseCommand(status);
         if (!commandResult.success) { return commandResult; }
-        string = commandResult.remaining;
         const command = commandResult.result;
 
         const line: Line = {
@@ -245,12 +225,11 @@ export function parseLine(string: string): ParseLineSuccess | ParseFailure {
             command,
         };
 
-        return succeed(line, string);
+        return succeed(line);
     }
 
-    const pickupResult = parsePickup(string);
+    const pickupResult = parsePickup(status);
     if (!pickupResult.success) { return pickupResult; }
-    string = pickupResult.remaining;
     const pickup = pickupResult.result;
 
     const line: Line = {
@@ -258,5 +237,5 @@ export function parseLine(string: string): ParseLineSuccess | ParseFailure {
         pickup,
     };
 
-    return succeed(line, string);
+    return succeed(line);
 }
