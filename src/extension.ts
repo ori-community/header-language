@@ -1,3 +1,4 @@
+import { watch } from 'fs';
 import * as vscode from 'vscode';
 import { offerCompletions } from './completion';
 import { describeLine } from './description';
@@ -19,6 +20,8 @@ const completionTriggerCharacters = [
     "!",
     "|",
 ];
+
+const filePattern = "**/*.{wotwr,wotwrh}";
 
 class HeaderCompletionItemProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[]> {
@@ -60,20 +63,35 @@ class HeaderHoverProvider implements vscode.HoverProvider {
     }
 }
 
+async function provideDiagnostics(collection: vscode.DiagnosticCollection) {
+    const files = await vscode.workspace.findFiles(filePattern);
+    for (const uri of files) {
+        try {
+            const document = await vscode.workspace.openTextDocument(uri);
+            updateDiagnostics(document, collection);
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerHoverProvider("ori-wotw-header", new HeaderHoverProvider));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider("ori-wotw-header", new HeaderCompletionItemProvider, ...completionTriggerCharacters));
 
     const diagnosticsCollection = vscode.languages.createDiagnosticCollection("ori-wotw-header");
     context.subscriptions.push(diagnosticsCollection);
-    if (vscode.window.activeTextEditor) {
-        updateDiagnostics(vscode.window.activeTextEditor.document, diagnosticsCollection);
-    }
-    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
-        if (editor !== undefined) {
-            updateDiagnostics(editor.document, diagnosticsCollection);
+
+    provideDiagnostics(diagnosticsCollection);
+
+    vscode.workspace.onDidChangeTextDocument(event => {
+        updateDiagnostics(event.document, diagnosticsCollection);
+    });
+    vscode.workspace.onDidDeleteFiles(event => {
+        for (const file of event.files) {
+            diagnosticsCollection.delete(file);
         }
-    }));
+    });
 }
 
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {

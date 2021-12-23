@@ -263,6 +263,7 @@ function parsePickup(status: ParseStatus): ParsePickupSuccess | ParseFailure {
     return succeed(pickup);
 }
 
+// TODO pool interpolation
 function preprocessLine(status: ParseStatus): ParseFailure | undefined {
     while (true) {
         const remaining = status.remaining;
