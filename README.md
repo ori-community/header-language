@@ -12,5 +12,6 @@ Language support for editing header files in [Visual Studio Code](https://code.v
 ## Features
 
 - Syntax Highlighting
+- Syntax error messages
 - Hover hints to explain lines
 - Autocompletion suggestions
