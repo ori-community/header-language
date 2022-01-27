@@ -125,6 +125,7 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
             parseRemainingLine(status);
         }
         parseComment(status);
+        if (status.remaining.length === 0) { break; }
         if (!parseLineBreak(status)) {
             const diagnosis = diagnose(document, fail(Token.lineBreak, status, undefined));
             if (diagnosis !== undefined) { diagnostics.push(diagnosis); }

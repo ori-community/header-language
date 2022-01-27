@@ -26,6 +26,7 @@ export enum SysCommandVariant {
     ifSelfEqual = 25,
     ifSelfGreater = 26,
     ifSelfLess = 27,
+    unequip = 28,
 }
 
 interface Autosave {
@@ -133,7 +134,11 @@ interface IfSelfLess {
     value: number,
     item: Item,
 }
-export type SysSubcommand = Autosave | SetResource | Checkpoint | KwolokStatue | Warp | Applier | SetHealth | SetEnergy | SetSpiritLight | Equip | TriggerBind | IfEqual | IfGreater | IfLess | DisableSync | EnableSync | CreateWarpIcon | DestroyWarpIcon | IfBounds | IfSelfEqual | IfSelfGreater | IfSelfLess;
+interface Unequip {
+    id: SysCommandVariant.unequip,
+    equipment: EquipmentVariants,
+}
+export type SysSubcommand = Autosave | SetResource | Checkpoint | KwolokStatue | Warp | Applier | SetHealth | SetEnergy | SetSpiritLight | Equip | TriggerBind | IfEqual | IfGreater | IfLess | DisableSync | EnableSync | CreateWarpIcon | DestroyWarpIcon | IfBounds | IfSelfEqual | IfSelfGreater | IfSelfLess | Unequip;
 
 export interface SysCommand {
     id: ItemVariant.sysCommand,

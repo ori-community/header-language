@@ -76,10 +76,13 @@ function describeSysCommand(command: SysSubcommand): string {
             return `Set current energy to ${command.amount}`;
         case SysCommandVariant.setSpiritLight:
             return `Set current spirit light to ${command.amount}`;
-        case SysCommandVariant.equip:
+        case SysCommandVariant.equip: {
             const equipmentName = EquipmentVariants[command.equipment];
             return `Equip ${equipmentName} to slot ${command.slot}`;
-        case SysCommandVariant.triggerBind:
+        } case SysCommandVariant.unequip: {
+            const equipmentName = EquipmentVariants[command.equipment];
+            return `Unequip ${equipmentName}`;
+        } case SysCommandVariant.triggerBind:
             return `Trigger keybind ${command.bind}`;
         case SysCommandVariant.ifEqual: {
             const uberStateDescription = describeUberState(command.uberIdentifier);

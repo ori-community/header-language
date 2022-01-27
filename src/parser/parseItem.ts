@@ -185,6 +185,17 @@ function parseEquip(status: ParseStatus): ParseCommandSuccess | ParseFailure {
 
     return succeed(command);
 }
+function parseUnequip(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const equipment = parseInteger(status);
+    if (equipment === null || !(equipment in EquipmentVariants)) { return fail(Token.equipment, status, { id: CompletionVariant.equipment }); }
+
+    const command: SysSubcommand = {
+        id: SysCommandVariant.unequip,
+        equipment,
+    };
+
+    return succeed(command);
+}
 function parseTriggerBind(status: ParseStatus): ParseCommandSuccess | ParseFailure {
     const bind = parseWord(status);
     if (bind === null) { return fail(Token.word, status, { id: CompletionVariant.keybind }); }
@@ -367,6 +378,7 @@ function parseSubcommand(status: ParseStatus, commandId: number): ParseCommandSu
         case SysCommandVariant.ifSelfEqual: return parseIfSelfEqual(status);
         case SysCommandVariant.ifSelfGreater: return parseIfSelfGreater(status);
         case SysCommandVariant.ifSelfLess: return parseIfSelfLess(status);
+        case SysCommandVariant.unequip: return parseUnequip(status);
         default:
             const errorStatus = status.clone();
             errorStatus.offset -= 2;
