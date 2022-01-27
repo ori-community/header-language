@@ -182,7 +182,7 @@ export function parseComment(status: ParseStatus): boolean {
     return true;
 }
 export function parseLineBreak(status: ParseStatus): boolean {
-    const regex = /^(\r\n|\r|\n|\z)/;
+    const regex = /^\s*?(\r\n|\r|\n|\z)/;
     const remaining = status.remaining;
 
     const match = remaining.match(regex);

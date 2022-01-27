@@ -1,10 +1,10 @@
 import { watch } from 'fs';
 import * as vscode from 'vscode';
-import { offerCompletions } from './completion';
+import { CompletionVariant, offerCompletions } from './completion';
 import { describeLine } from './description';
 import { diagnose } from './diagnostics';
 
-import { parseAnnotation, parseComment, parseLine, parseLineBreak, parseRemainingLine, ParseStatus } from './parser';
+import { fail, parseAnnotation, parseComment, parseLine, parseLineBreak, parseRemainingLine, ParseStatus, Token } from './parser';
 
 const completionTriggerCharacters = [
     "0",
@@ -121,6 +121,12 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
         const lineResult = parseLine(status);
         if (!lineResult.success) {
             const diagnosis = diagnose(document, lineResult);
+            if (diagnosis !== undefined) { diagnostics.push(diagnosis); }
+            parseRemainingLine(status);
+        }
+        parseComment(status);
+        if (!parseLineBreak(status)) {
+            const diagnosis = diagnose(document, fail(Token.lineBreak, status, undefined));
             if (diagnosis !== undefined) { diagnostics.push(diagnosis); }
             parseRemainingLine(status);
         }
