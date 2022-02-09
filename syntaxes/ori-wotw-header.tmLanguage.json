@@ -14,7 +14,7 @@
     ],
     "repository": {
         "flags": {
-            "match": "^(Flags:)(\\s*\\w+(?:\\s*,\\s*\\w+)*)?\\b",
+            "match": "^(Flags:)(\\s*[^,/]+(?:,\\s*[^,/]+)*)?\\b",
             "captures": {
                 "1": { "name": "variable.other.enummember" },
                 "2": { "name": "variable" }

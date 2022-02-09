@@ -325,7 +325,7 @@ export function parseLine(status: ParseStatus): ParseLineSuccess | ParseFailure 
     if (eat(status, "Flags:")) {
         do {
             eat(status, " ");
-            const flag = parseWord(status);
+            const flag = parseString(status, /[^,\n]+/);
             if (flag === null) { return fail(Token.flag, status, { id: CompletionVariant.flag }); }
         } while (eat(status, ","));
 
