@@ -106,6 +106,7 @@ interface CreateWarpIcon {
     warpId: number,
     x: number,
     y: number,
+    label?: string,
 }
 interface DestroyWarpIcon {
     id: SysCommandVariant.destroyWarpIcon,

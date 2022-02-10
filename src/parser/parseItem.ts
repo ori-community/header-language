@@ -273,11 +273,18 @@ function parseCreateWarpIcon(status: ParseStatus): ParseCommandSuccess | ParseFa
     const y = parseFloat(status);
     if (y === null) { return fail(Token.float, status, undefined); }
 
+    let label;
+    if (eat(status, "|")) {
+        label = parseRemainingLine(status);
+        if (label === null) { return fail(Token.text, status, undefined); }
+    }
+
     const command: SysSubcommand = {
         id: SysCommandVariant.createWarpIcon,
         warpId,
         x,
         y,
+        label,
     };
 
     return succeed(command);

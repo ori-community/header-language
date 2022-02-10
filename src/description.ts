@@ -103,7 +103,7 @@ function describeSysCommand(command: SysSubcommand): string {
             const uberStateDescription = describeUberState(command.uberIdentifier);
             return `Enable multiplayer sync for ${uberStateDescription}`;
         } case SysCommandVariant.createWarpIcon:
-            return `Create warp icon ${command.warpId} at ${command.x}, ${command.y}`;
+            return `Create warp icon ${command.warpId} at ${command.x}, ${command.y}${command.label === undefined ? "" : ` with a label "${command.label}"`}`;
         case SysCommandVariant.destroyWarpIcon:
             return `Destroy warp icon ${command.warpId}`;
         case SysCommandVariant.ifBounds: {

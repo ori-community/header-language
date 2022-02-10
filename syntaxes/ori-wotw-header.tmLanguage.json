@@ -179,10 +179,11 @@
             }
         },
         "createWarp": {
-            "match": "\\G(4\\|22\\|)(\\d+\\|-?\\d+(?:[.,]\\d+)?\\|-?\\d+(?:[.,]\\d+)?)\\b",
+            "match": "\\G(4\\|22\\|)(\\d+\\|-?\\d+(?:[.,]\\d+)?\\|-?\\d+(?:[.,]\\d+)?)(\\|[^\\s]+)?\\b",
             "captures": {
                 "1": { "name": "variable.other.enummember" },
-                "2": { "name": "variable" }
+                "2": { "name": "variable" },
+                "3": { "name": "string" }
             }
         },
         "destroyWarp": {
