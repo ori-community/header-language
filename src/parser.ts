@@ -84,12 +84,16 @@ export interface Parameter {
 export class ParseStatus {
     remaining: string;
     offset: number;
+    lengthChanges: [number, number][];
     parameters: Parameter[];
+    pool: string[];
 
-    constructor(input: string, offset: number = 0, parameters: Parameter[] = []) {
+    constructor(input: string, offset: number = 0, lengthChanges: [number, number][] = [], parameters: Parameter[] = [], pool: string[] = []) {
         this.remaining = input;
         this.offset = offset;
+        this.lengthChanges = lengthChanges;
         this.parameters = parameters;
+        this.pool = pool;
     }
 
     progress(offset: number) {
@@ -97,14 +101,33 @@ export class ParseStatus {
         this.offset += offset;
     }
 
+    take(): string | undefined {
+        if (this.pool.length === 0) { return undefined; }
+        const index = Math.floor(Math.random() * this.pool.length);
+        return this.pool.splice(index, 1)[0];
+    }
+
     clone(): ParseStatus {
-        return new ParseStatus(this.remaining, this.offset, this.parameters);
+        return new ParseStatus(this.remaining, this.offset, this.lengthChanges, this.parameters, this.pool);
     }
 
     replaceWith(other: ParseStatus) {
         this.remaining = other.remaining;
         this.offset = other.offset;
+        this.lengthChanges = other.lengthChanges;
         this.parameters = other.parameters;
+        this.pool = other.pool;
+    }
+
+    offsetInSource(): number {
+        let offset = this.offset;
+        for (const [changeOffset, delta] of this.lengthChanges) {
+            if (this.offset >= changeOffset) {
+                offset += delta;
+                // offset = Math.max(offset + delta, changeOffset);
+            } else { break; }
+        }
+        return offset;
     }
 }
 
@@ -260,27 +283,57 @@ function parsePickup(status: ParseStatus): ParsePickupSuccess | ParseFailure {
     return succeed(pickup);
 }
 
-// TODO pool interpolation
 function preprocessLine(status: ParseStatus): ParseFailure | undefined {
-    while (true) {
+    let hasMatch;
+    do {
+        hasMatch = false;
         const remaining = status.remaining;
 
-        const match = remaining.match(/\$PARAM\((.*?)\)|\n|\r/);
-        if (match === null) { return undefined; }
+        const paramMatch = remaining.match(/\$PARAM\((.*?)\)|\n|\r/);
+        if (paramMatch !== null) {
+            const identifier = paramMatch[1];
+            const index = paramMatch.index;
+            if (identifier !== undefined && index !== undefined) {
+                hasMatch = true;
 
-        const identifier = match[1];
-        const index = match.index;
-        if (identifier === undefined || index === undefined) { return undefined; }
+                const value = status.parameters.find(param => param.identifier === identifier)?.defaultValue;
+                if (value === undefined) {
+                    const errorStatus = status.clone();
+                    errorStatus.offset += index + 7;
+                    return fail(Token.parameter, errorStatus, undefined);
+                }
+                const valueString = value.toString();
 
-        const value = status.parameters.find(param => param.identifier === identifier)?.defaultValue;
-        if (value === undefined) {
-            const errorStatus = status.clone();
-            errorStatus.offset += index + 7;
-            return fail(Token.parameter, errorStatus, undefined);
+                const paramMatchLength = paramMatch[0].length;
+                const lengthChange: [number, number] = [status.offset + index, paramMatchLength - valueString.length];
+                status.lengthChanges.push(lengthChange);
+
+                status.remaining = remaining.slice(0, index) + valueString + remaining.slice(index + paramMatchLength);
+            }
         }
+        const takeMatch = remaining.match(/(!!take)|\n|\r/);
+        if (takeMatch !== null) {
+            const take = takeMatch[1];
+            const index = takeMatch.index;
+            if (take !== undefined && index !== undefined) {
+                hasMatch = true;
 
-        status.remaining = remaining.slice(0, index) + value + remaining.slice(index + match[0].length);
-    }
+                const value = status.take();
+                if (value === undefined) {
+                    const errorStatus = status.clone();
+                    errorStatus.offset += index + 2;
+                    return fail("!!pool before !!take", errorStatus, undefined);
+                }
+                const valueString = value.toString();
+
+                const takeMatchLength = 6;
+                const lengthChange: [number, number] = [status.offset + index, takeMatchLength - valueString.length];
+                status.lengthChanges.push(lengthChange);
+
+                status.remaining = remaining.slice(0, index) + valueString + remaining.slice(index + takeMatchLength);
+            }
+        }
+    } while (hasMatch);
 }
 
 type ParseLineSuccess = ParseSuccess<Line>;

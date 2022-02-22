@@ -12,7 +12,7 @@ function errorMessage(parseFailure: ParseFailure): string {
 }
 
 export function diagnose(document: vscode.TextDocument, parseFailure: ParseFailure): vscode.Diagnostic | undefined {
-    const position = document.positionAt(parseFailure.status.offset);
+    const position = document.positionAt(parseFailure.status.offsetInSource());
     let range = document.getWordRangeAtPosition(position);
     if (range === undefined) { range = new vscode.Range(position, position); }
 

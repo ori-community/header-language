@@ -179,6 +179,8 @@ function parsePoolCommand(status: ParseStatus): ParseCommandSuccess | ParseFailu
     const poolItem = parseRemainingLine(status);
     if (poolItem === null) { return fail(Token.text, status, undefined); }
 
+    status.pool.push(poolItem);
+
     const command: Command = {
         id: CommandVariant.pool,
         poolItem,
