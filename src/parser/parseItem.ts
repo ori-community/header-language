@@ -844,6 +844,42 @@ function parseShopSetIcon(status: ParseStatus): ParseShopCommandSuccess | ParseF
 
     return succeed(subcommand);
 }
+function parseShopSetText(status: ParseStatus, variant: ShopCommandVariant.setTitle | ShopCommandVariant.setDescription): ParseShopCommandSuccess | ParseFailure {
+    const uberIdentifierResult = parseUberIdentifier(status);
+    if (!uberIdentifierResult.success) { return uberIdentifierResult; }
+    const uberIdentifier = uberIdentifierResult.result;
+
+    let text = null;
+    if (eat(status, "|")) {
+        text = parseRemainingLine(status) || "";
+    }
+
+    const subcommand: ShopSubcommand = {
+        id: variant,
+        uberIdentifier,
+        text,
+    };
+
+    return succeed(subcommand);
+}
+function parseShopSetFlag(status: ParseStatus, variant: ShopCommandVariant.setLocked | ShopCommandVariant.setVisible): ParseShopCommandSuccess | ParseFailure {
+    const uberIdentifierResult = parseUberIdentifier(status);
+    if (!uberIdentifierResult.success) { return uberIdentifierResult; }
+    const uberIdentifier = uberIdentifierResult.result;
+
+    if (!eat(status, "|")) { return fail("|", status, { id: CompletionVariant.sysCommand }); }
+
+    const flag = parseBoolean(status);
+    if (flag === null) { return fail(Token.boolean, status, { id: CompletionVariant.boolean }); }
+
+    const subcommand: ShopSubcommand = {
+        id: variant,
+        uberIdentifier,
+        flag,
+    };
+
+    return succeed(subcommand);
+}
 function parseShopCommand(status: ParseStatus): ParseItemSuccess | ParseFailure {
     const commandId = parseInteger(status);
     if (commandId === null) { return fail(Token.shopCommandIdentifier, status, { id: CompletionVariant.shopCommand }); }
@@ -854,6 +890,18 @@ function parseShopCommand(status: ParseStatus): ParseItemSuccess | ParseFailure 
     switch (commandId) {
         case ShopCommandVariant.setIcon:
             subcommandResult = parseShopSetIcon(status);
+            break;
+        case ShopCommandVariant.setTitle:
+            subcommandResult = parseShopSetText(status, ShopCommandVariant.setTitle);
+            break;
+        case ShopCommandVariant.setDescription:
+            subcommandResult = parseShopSetText(status, ShopCommandVariant.setDescription);
+            break;
+        case ShopCommandVariant.setLocked:
+            subcommandResult = parseShopSetFlag(status, ShopCommandVariant.setLocked);
+            break;
+        case ShopCommandVariant.setVisible:
+            subcommandResult = parseShopSetFlag(status, ShopCommandVariant.setLocked);
             break;
         default:
             const errorStatus = status.clone();

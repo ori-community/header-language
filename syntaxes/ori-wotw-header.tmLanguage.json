@@ -507,6 +507,13 @@
             "name": "variable.other.enummember"
         },
         "shopCommand": {
+            "patterns": [
+                { "include": "#shopIcon" },
+                { "include": "#shopText" },
+                { "include": "#shopFlag" }
+            ]
+        },
+        "shopIcon": {
             "begin": "\\G17\\|0\\|\\d+\\|\\d+\\|",
             "end": "$|(?=//)",
             "beginCaptures": {
@@ -515,6 +522,20 @@
             "patterns": [
                 { "include": "#icon" }
             ]
+        },
+        "shopText": {
+            "begin": "\\G17\\|[12]\\|\\d+\\|\\d+\\|?",
+            "end": "$|(?=//)",
+            "beginCaptures": {
+                "0": { "name": "variable.other.enummember" }
+            },
+            "patterns": [
+                { "include": "#messageString" }
+            ]
+        },
+        "shopFlag": {
+            "match": "\\G17\\|[34]\\|\\d+\\|\\d+\\|(?:true|false)\\b",
+            "name": "variable.other.enummember"
         },
         "command": {
             "patterns": [

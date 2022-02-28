@@ -151,10 +151,22 @@ function describeWheelCommand(command: WheelSubcommand): string {
 }
 function describeShopCommand(command: ShopSubcommand): string {
     switch (command.id) {
-        case ShopCommandVariant.setIcon:
+        case ShopCommandVariant.setIcon: {
             const uberStateDescription = describeUberState(command.uberIdentifier);
             const iconDescription = describeIcon(command.icon);
             return `Sets the shop icon of ${uberStateDescription} to ${iconDescription}`;
+        } case ShopCommandVariant.setTitle: {
+            const uberStateDescription = describeUberState(command.uberIdentifier);
+            return `Sets the shop item title of ${uberStateDescription} to ${command.text || "the default"}`;
+        } case ShopCommandVariant.setDescription: {
+            const uberStateDescription = describeUberState(command.uberIdentifier);
+            return `Sets the shop item description of ${uberStateDescription} to ${command.text || "the default"}`;
+        } case ShopCommandVariant.setLocked: {
+            const uberStateDescription = describeUberState(command.uberIdentifier);
+            return `${command.flag ? "L" : "Unl"}ocks the shop item at ${uberStateDescription}`;
+        } case ShopCommandVariant.setVisible:
+            const uberStateDescription = describeUberState(command.uberIdentifier);
+            return `Turns the shop item at ${uberStateDescription} ${command.flag ? "" : "in"}visible`;
     }
 }
 
