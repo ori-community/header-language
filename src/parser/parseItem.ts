@@ -901,7 +901,7 @@ function parseShopCommand(status: ParseStatus): ParseItemSuccess | ParseFailure 
             subcommandResult = parseShopSetFlag(status, ShopCommandVariant.setLocked);
             break;
         case ShopCommandVariant.setVisible:
-            subcommandResult = parseShopSetFlag(status, ShopCommandVariant.setLocked);
+            subcommandResult = parseShopSetFlag(status, ShopCommandVariant.setVisible);
             break;
         default:
             const errorStatus = status.clone();
