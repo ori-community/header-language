@@ -543,6 +543,7 @@
                 { "include": "#addCommand" },
                 { "include": "#nameCommand" },
                 { "include": "#displayCommand" },
+                { "include": "#descriptionCommand" },
                 { "include": "#priceCommand" },
                 { "include": "#iconCommand" },
                 { "include": "#parameterCommand" },
@@ -585,6 +586,17 @@
         },
         "displayCommand": {
             "begin": "^!!display ",
+            "end": "$|(?=//)",
+            "beginCaptures": {
+                "0": { "name": "keyword" }
+            },
+            "patterns": [
+                { "include": "#item" },
+                { "include": "#messageString" }
+            ]
+        },
+        "descriptionCommand": {
+            "begin": "^!!description ",
             "end": "$|(?=//)",
             "beginCaptures": {
                 "0": { "name": "keyword" }

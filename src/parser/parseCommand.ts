@@ -85,6 +85,24 @@ function parseDisplayCommand(status: ParseStatus): ParseCommandSuccess | ParseFa
 
     return succeed(command);
 }
+function parseDescriptionCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
+    const itemResult = parseItem(status);
+    if (!itemResult.success) { return itemResult; }
+    const item = itemResult.result;
+
+    if (!eat(status, " ")) { return fail(" ", status, { id: CompletionVariant.command }); }
+
+    const description = parseRemainingLine(status);
+    if (description === null) { return fail(Token.message, status, undefined); }
+
+    const command: Command = {
+        id: CommandVariant.display,
+        item,
+        display: description,
+    };
+
+    return succeed(command);
+}
 function parsePriceCommand(status: ParseStatus): ParseCommandSuccess | ParseFailure {
     const itemResult = parseItem(status);
     if (!itemResult.success) { return itemResult; }
@@ -241,6 +259,7 @@ export function parseCommand(status: ParseStatus): ParseCommandSuccess | ParseFa
         case "remove": return parseChangeItemPool(status, CommandVariant.remove);
         case "name": return parseNameCommand(status);
         case "display": return parseDisplayCommand(status);
+        case "description": return parseDescriptionCommand(status);
         case "price": return parsePriceCommand(status);
         case "icon": return parseIconCommand(status);
         case "parameter": return parseParameterCommand(status);
