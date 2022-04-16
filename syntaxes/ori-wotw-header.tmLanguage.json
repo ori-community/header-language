@@ -103,7 +103,8 @@
                 { "include": "#destroyWarp" },
                 { "include": "#ifbounds" },
                 { "include": "#ifself" },
-                { "include": "#unequip" }
+                { "include": "#unequip" },
+                { "include": "#saveString" }
             ]
         },
         "autosave": {
@@ -219,6 +220,16 @@
             "match": "\\G4\\|28\\|(?:100[0-5]|20[01]\\d|300[0-5]|400\\d)\\b",
             "name": "variable.other.enummember"
         },
+        "saveString": {
+            "begin": "\\G4\\|(?:29|30)\\|\\d+\\|",
+            "end": "$|(?=//)",
+            "beginCaptures": {
+                "0": { "name": "variable.other.enummember" }
+            },
+            "patterns": [
+                { "include": "#messageString" }
+            ]
+        },
         "teleporter": {
             "match": "\\G5\\|-?(?:\\d|1[0-7])\\b",
             "name": "variable.other.enummember"
@@ -240,6 +251,7 @@
                 { "include": "#messageXml" },
                 { "include": "#messageUberStatePointer" },
                 { "include": "#messageItemWriter" },
+                { "include": "#messageStoredStrings" },
                 { "include": "#WHEREIS" },
                 { "include": "#HOWMANY" },
                 { "include": "#messageColoring" },
@@ -279,6 +291,10 @@
             "patterns": [
                 { "include": "#item" }
             ]
+        },
+        "messageStoredStrings": {
+            "match": "\\$\\{\\d+\\}",
+            "name": "string.regexp"
         },
         "WHEREIS": {
             "begin": "\\$WHEREIS\\(",

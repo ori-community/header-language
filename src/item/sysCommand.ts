@@ -27,6 +27,8 @@ export enum SysCommandVariant {
     ifSelfGreater = 26,
     ifSelfLess = 27,
     unequip = 28,
+    saveString = 29,
+    appendString = 30,
 }
 
 interface Autosave {
@@ -139,7 +141,42 @@ interface Unequip {
     id: SysCommandVariant.unequip,
     equipment: EquipmentVariants,
 }
-export type SysSubcommand = Autosave | SetResource | Checkpoint | KwolokStatue | Warp | Applier | SetHealth | SetEnergy | SetSpiritLight | Equip | TriggerBind | IfEqual | IfGreater | IfLess | DisableSync | EnableSync | CreateWarpIcon | DestroyWarpIcon | IfBounds | IfSelfEqual | IfSelfGreater | IfSelfLess | Unequip;
+interface SaveString {
+    id: SysCommandVariant.saveString,
+    stringId: number,
+    string: string,
+}
+interface AppendString {
+    id: SysCommandVariant.appendString,
+    stringId: number,
+    string: string,
+}
+export type SysSubcommand =
+Autosave
+| SetResource
+| Checkpoint
+| KwolokStatue
+| Warp
+| Applier
+| SetHealth
+| SetEnergy
+| SetSpiritLight
+| Equip
+| TriggerBind
+| IfEqual
+| IfGreater
+| IfLess
+| DisableSync
+| EnableSync
+| CreateWarpIcon
+| DestroyWarpIcon
+| IfBounds
+| IfSelfEqual
+| IfSelfGreater
+| IfSelfLess
+| Unequip
+| SaveString
+| AppendString;
 
 export interface SysCommand {
     id: ItemVariant.sysCommand,

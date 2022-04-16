@@ -363,6 +363,29 @@ function parseIfSelfGreater(status: ParseStatus): ParseCommandSuccess | ParseFai
 function parseIfSelfLess(status: ParseStatus): ParseCommandSuccess | ParseFailure {
     return parseIfSelf(status, SysCommandVariant.ifSelfLess);
 }
+function parseStringCommand(status: ParseStatus, id: SysCommandVariant.saveString | SysCommandVariant.appendString): ParseCommandSuccess | ParseFailure {
+    const stringId = parseInteger(status);
+    if (stringId === null) { return fail(Token.integer, status, undefined); }
+
+    if (!eat(status, "|")) { return fail("|", status, undefined); }
+
+    const string = parseRemainingLine(status);
+    if (string === null) { return fail(Token.text, status, undefined); }
+
+    const command: SysSubcommand = {
+        id,
+        stringId,
+        string,
+    };
+
+    return succeed(command);
+}
+function parseSaveString(status: ParseStatus) {
+    return parseStringCommand(status, SysCommandVariant.saveString);
+}
+function parseAppendString(status: ParseStatus) {
+    return parseStringCommand(status, SysCommandVariant.appendString);
+}
 function parseSubcommand(status: ParseStatus, commandId: number): ParseCommandSuccess | ParseFailure {
     switch (commandId) {
         case SysCommandVariant.setResource: return parseSetResource(status);
@@ -386,6 +409,8 @@ function parseSubcommand(status: ParseStatus, commandId: number): ParseCommandSu
         case SysCommandVariant.ifSelfGreater: return parseIfSelfGreater(status);
         case SysCommandVariant.ifSelfLess: return parseIfSelfLess(status);
         case SysCommandVariant.unequip: return parseUnequip(status);
+        case SysCommandVariant.saveString: return parseSaveString(status);
+        case SysCommandVariant.appendString: return parseAppendString(status);
         default:
             const errorStatus = status.clone();
             errorStatus.offset -= 2;

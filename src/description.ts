@@ -118,7 +118,10 @@ function describeSysCommand(command: SysSubcommand): string {
         } case SysCommandVariant.ifSelfLess: {
             const itemDescription = describeItem(command.item);
             return `Grant this item if the location's value is less than ${command.value}:\n\n${itemDescription}`;
-        }
+        } case SysCommandVariant.saveString:
+            return `Stores the string "${command.string}" under the identifier ${command.stringId}`;
+        case SysCommandVariant.appendString:
+            return `Appends the string "${command.string}" to the current value stored under the identifier ${command.stringId}`;
     }
 }
 function describeIcon(icon: Icon): string {
