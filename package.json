@@ -2,7 +2,7 @@
 	"name": "header-language",
 	"displayName": "Ori WotW Header Language",
 	"description": "Support for the .wotwrh language",
-	"version": "0.4.4",
+	"version": "0.5.0",
 	"publisher": "orirando",
 	"license": "MIT",
 	"repository": {
@@ -45,9 +45,13 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
+		"compile": "npm run build-wasm && tsc -p ./",
+		"watch": "npm run build-wasm && tsc -watch -p ./",
+		"build-wasm": "wasm-pack build --release --target nodejs wasm",
 		"lint": "eslint src --ext ts"
+	},
+	"dependencies": {
+		"wotw-seedgen": "file:./wasm/pkg"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.60.0",

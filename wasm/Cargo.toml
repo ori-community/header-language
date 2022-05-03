@@ -1,0 +1,19 @@
+[package]
+name = "wasm"
+description = "WASM binds for the project"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+seedgen = { path = "wotw-seedgen" }
+wasm-bindgen = { version = "0.2" }
+rand = { version = "0.8 "}
+getrandom = { version = "0.2", features = ["js"] }
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"

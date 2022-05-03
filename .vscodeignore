@@ -3,6 +3,7 @@
 out/test/**
 
 src/**
+wasm/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md

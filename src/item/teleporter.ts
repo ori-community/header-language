@@ -1,5 +1,3 @@
-import { ItemVariant } from "../item";
-
 export enum TeleporterVariant {
     midnightBurrows,
     howlsDen,
@@ -19,8 +17,4 @@ export enum TeleporterVariant {
     shriek,
     inkwaterMarsh,
     glades,
-}
-export interface Teleporter {
-    id: ItemVariant.teleporter,
-    variant: TeleporterVariant,
 }

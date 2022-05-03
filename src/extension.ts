@@ -1,10 +1,7 @@
-import { watch } from 'fs';
 import * as vscode from 'vscode';
-import { CompletionVariant, offerCompletions } from './completion';
-import { describeLine } from './description';
-import { diagnose } from './diagnostics';
+import { offerCompletions } from './completion';
 
-import { fail, parseAnnotation, parseComment, parseLine, parseLineBreak, parseRemainingLine, ParseStatus, Token } from './parser';
+import { check_errors, parse_line } from 'wotw-seedgen';
 
 const completionTriggerCharacters = [
     "0",
@@ -23,41 +20,44 @@ const completionTriggerCharacters = [
 
 const filePattern = "**/*.{wotwr,wotwrh}";
 
+function toArray<T>(wasmList: { next: () => T | undefined }): T[] {
+    const items = [];
+    while (true) {
+        const item = wasmList.next();
+        if (item === undefined) {
+            return items;
+        }
+        items.push(item);
+    }
+}
+
 class HeaderCompletionItemProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[]> {
         const documentLine = document.lineAt(position);
-        const status: ParseStatus = new ParseStatus(documentLine.text);
+        const text = documentLine.text;
 
-        const line = parseLine(status);
-        if (line.success) { return null; }
+        const errors = check_errors(text);
+        const error = toArray(errors)[0];
+        if (error === undefined) { return null; }
 
-        const completion = line.completion;
-        if (completion !== undefined) {
-            return offerCompletions(completion);
-        }
-
-        return null;
+        return offerCompletions(error, text);
     }
 }
 
 class HeaderHoverProvider implements vscode.HoverProvider {
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
         const documentLine = document.lineAt(position);
-        let lineText = documentLine.text;
-        const status: ParseStatus = new ParseStatus(lineText);
+        const lineText = documentLine.text;
 
-        const line = parseLine(status);
-        if (!line.success) { return null; }
+        const line = parse_line(lineText);
+        if (line === undefined) { return null; }
 
-        const description = describeLine(line.result);
+        const description = line.description();
+        if (description === undefined) { return null; }
 
-        const commentIndex = lineText.indexOf("//");
-        if (commentIndex !== -1) {
-            lineText = lineText.slice(0, commentIndex);
-        }
-        lineText = lineText.trimEnd();
-
-        const contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ].concat(description);
+        const descriptionArray = toArray(description)
+            .map(description => description.replace(":", ":\n\n"));
+        const contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ].concat(descriptionArray);
 
         return { contents: contents };
     }
@@ -103,35 +103,15 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
-    let diagnostics: vscode.Diagnostic[] = [];
-
-    const status: ParseStatus = new ParseStatus(document.getText());
-
-    const annotationsResult = parseAnnotation(status);
-    if (!annotationsResult.success) {
-        const diagnosis = diagnose(document, annotationsResult);
-        if (diagnosis !== undefined) { diagnostics.push(diagnosis); }
-    }
-
-    while(true) {
-        parseComment(status);
-        if (status.remaining.length === 0) { break; }
-        if (parseLineBreak(status)) { continue; }
-
-        const lineResult = parseLine(status);
-        if (!lineResult.success) {
-            const diagnosis = diagnose(document, lineResult);
-            if (diagnosis !== undefined) { diagnostics.push(diagnosis); }
-            parseRemainingLine(status);
-        }
-        parseComment(status);
-        if (status.remaining.length === 0) { break; }
-        if (!parseLineBreak(status)) {
-            const diagnosis = diagnose(document, fail(Token.lineBreak, status, undefined));
-            if (diagnosis !== undefined) { diagnostics.push(diagnosis); }
-            parseRemainingLine(status);
-        }
-    }
+    const text = document.getText();
+    const errors = check_errors(text);
+    const diagnostics = toArray(errors).map(error => {
+        const message = error.message();
+        const start = document.positionAt(error.start_index());
+        const end = document.positionAt(error.end_index());
+        const range = new vscode.Range(start, end);
+        return new vscode.Diagnostic(range, message);
+    });
 
     collection.set(document.uri, diagnostics);
 }

@@ -1,0 +1,3 @@
+[submodule "wasm/wotw-seedgen"]
+	path = wasm/wotw-seedgen
+	url = https://github.com/ori-rando/wotw-seedgen

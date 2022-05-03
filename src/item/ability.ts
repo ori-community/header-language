@@ -1,5 +1,3 @@
-import { ItemVariant } from "../item";
-
 export enum AbilityVariant {
     bash = 0,
     wallJump = 3,
@@ -29,9 +27,4 @@ export enum AbilityVariant {
     flap = 118,
     ancestralLightA = 120,
     ancestralLightB = 121,
-}
-export interface Ability {
-    id: ItemVariant.ability,
-    variant: AbilityVariant,
-    remove: boolean,
 }
