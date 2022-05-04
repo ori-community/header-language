@@ -55,9 +55,8 @@ class HeaderHoverProvider implements vscode.HoverProvider {
         const description = line.description();
         if (description === undefined) { return null; }
 
-        const descriptionArray = toArray(description)
-            .map(description => description.replace(":", ":\n\n"));
-        const contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ].concat(descriptionArray);
+        const multilineDescription = description.map(description => description.replace(":", ":\n\n"));
+        const contents = [ `\`\`\`ori-wotw-header\n${lineText}\n\`\`\`` ].concat(multilineDescription);
 
         return { contents: contents };
     }

@@ -414,6 +414,7 @@ name = "wasm"
 version = "0.1.0"
 dependencies = [
  "getrandom",
+ "js-sys",
  "rand",
  "seedgen",
  "wasm-bindgen",

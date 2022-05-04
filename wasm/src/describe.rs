@@ -1,16 +1,16 @@
+use js_sys::JsString;
+
 use seedgen::header::{Annotation, HeaderCommand, TimerDefinition, VPickup};
 
-use crate::StringList;
-
-pub fn annotation(annotation: &Annotation) -> StringList {
+pub fn annotation(annotation: &Annotation) -> Vec<JsString> {
     let description = match annotation {
         Annotation::Hide => "Hide this header from the public interface"
     };
     let description = format!("**Annotation**\n\n{description}");
-    vec![description].into()
+    vec![description.into()]
 }
 
-pub fn command(command: &HeaderCommand) -> StringList {
+pub fn command(command: &HeaderCommand) -> Vec<JsString> {
     let description = match command {
         HeaderCommand::Include { name } => format!("Include header {name}"),
         HeaderCommand::Exclude { name } => format!("Exclude header {name}"),
@@ -27,16 +27,16 @@ pub fn command(command: &HeaderCommand) -> StringList {
         HeaderCommand::EndIf => "Closes one if block".to_string(),
     };
     let description = format!("**Command**\n\n{description}");
-    vec![description].into()
+    vec![description.into()]
 }
 
-pub fn timer(timer: &TimerDefinition) -> StringList {
+pub fn timer(timer: &TimerDefinition) -> Vec<JsString> {
     let description = format!("**Timer**\n\nBind a timer on {} to a toggle on {}", timer.timer, timer.toggle);
-    vec![description].into()
+    vec![description.into()]
 }
 
-pub fn pickup(pickup: &VPickup) -> StringList {
+pub fn pickup(pickup: &VPickup) -> Vec<JsString> {
     let location = format!("**Location**\n\n{}", pickup.trigger);
     let item = format!("**Item**\n\n{}", pickup.item);
-    vec![location, item].into()
+    vec![location.into(), item.into()]
 }

@@ -1,6 +1,7 @@
 mod describe;
 
 use wasm_bindgen::prelude::*;
+use js_sys::JsString;
 
 use seedgen::Header;
 use seedgen::header::parser::ParseError as SeedgenParseError;
@@ -80,7 +81,7 @@ pub fn parse_line(input: String) -> Option<HeaderContent> {
 wrapper_type! { HeaderContent, SeedgenHeaderContent }
 #[wasm_bindgen]
 impl HeaderContent {
-    pub fn description(&self) -> Option<StringList> {
+    pub fn description(&self) -> Option<Vec<JsString>> {
         let description = match &self.inner {
             SeedgenHeaderContent::OuterDocumentation(_)
             | SeedgenHeaderContent::InnerDocumentation(_)
@@ -93,5 +94,3 @@ impl HeaderContent {
         Some(description)
     }
 }
-
-wrapper_list! { StringList, String, String }
