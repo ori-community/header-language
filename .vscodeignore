@@ -5,11 +5,13 @@ out/test/**
 src/**
 wasm/**
 .gitignore
+.gitmodules
 .yarnrc
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
+**/*.bat
 
 data_converter/
