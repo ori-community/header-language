@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { offerCompletions } from './completion';
 
-import { check_errors, parse_line } from 'wotw-seedgen';
+import { checkErrors, parseLine } from 'wotw-seedgen';
 
 const completionTriggerCharacters = [
     "0",
@@ -36,7 +36,7 @@ class HeaderCompletionItemProvider implements vscode.CompletionItemProvider {
         const documentLine = document.lineAt(position);
         const text = documentLine.text;
 
-        const errors = check_errors(text);
+        const errors = checkErrors(text);
         const error = toArray(errors)[0];
         if (error === undefined) { return null; }
 
@@ -49,7 +49,7 @@ class HeaderHoverProvider implements vscode.HoverProvider {
         const documentLine = document.lineAt(position);
         const lineText = documentLine.text;
 
-        const line = parse_line(lineText);
+        const line = parseLine(lineText);
         if (line === undefined) { return null; }
 
         const description = line.description();
@@ -103,11 +103,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
     const text = document.getText();
-    const errors = check_errors(text);
+    const errors = checkErrors(text);
     const diagnostics = toArray(errors).map(error => {
         const message = error.message();
-        const start = document.positionAt(error.start_index());
-        const end = document.positionAt(error.end_index());
+        const start = document.positionAt(error.startIndex());
+        const end = document.positionAt(error.endIndex());
         const range = new vscode.Range(start, end);
         return new vscode.Diagnostic(range, message);
     });

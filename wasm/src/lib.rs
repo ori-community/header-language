@@ -42,7 +42,7 @@ macro_rules! wrapper_list {
 }
 
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = "checkErrors")]
 pub fn check_errors(input: String) -> ParseErrorList {
     let errors = Header::parse(input, &mut rand::thread_rng())
         .err()
@@ -58,9 +58,11 @@ impl ParseError {
     pub fn message(&self) -> String {
         self.inner.to_string()
     }
+    #[wasm_bindgen(js_name = "startIndex")]
     pub fn start_index(&self) -> usize {
         self.inner.range.start
     }
+    #[wasm_bindgen(js_name = "endIndex")]
     pub fn end_index(&self) -> usize {
         self.inner.range.end
     }
@@ -69,7 +71,7 @@ impl ParseError {
     }
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = "parseLine")]
 pub fn parse_line(input: String) -> Option<HeaderContent> {
     let content = Header::parse(input, &mut rand::thread_rng())
         .ok()?
