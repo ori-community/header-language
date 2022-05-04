@@ -1,4 +1,5 @@
 mod describe;
+mod helpers;
 
 use wasm_bindgen::prelude::*;
 use js_sys::JsString;
@@ -7,52 +8,31 @@ use seedgen::Header;
 use seedgen::header::parser::ParseError as SeedgenParseError;
 use seedgen::header::HeaderContent as SeedgenHeaderContent;
 
-macro_rules! wrapper_type {
-    ($wasm_type:ident, $seedgen_type:ident) => {
-        #[wasm_bindgen]
-        pub struct $wasm_type {
-            inner: $seedgen_type
-        }
-        impl ::std::convert::From<$seedgen_type> for $wasm_type {
-            fn from(inner: $seedgen_type) -> $wasm_type {
-                $wasm_type { inner }
-            }
-        }
-    };
-}
-macro_rules! wrapper_list {
-    ($wasm_list_type:ident, $wasm_item_type:ident, $seedgen_type:ident) => {
-        #[wasm_bindgen]
-        pub struct $wasm_list_type {
-            inner: ::std::vec::IntoIter<$seedgen_type>
-        }
-        impl ::std::convert::From<::std::vec::Vec<$seedgen_type>> for $wasm_list_type {
-            fn from(inner: ::std::vec::Vec<$seedgen_type>) -> $wasm_list_type {
-                $wasm_list_type { inner: inner.into_iter() }
-            }
-        }
-        #[wasm_bindgen]
-        impl $wasm_list_type {
-            pub fn next(&mut self) -> ::std::option::Option<$wasm_item_type> {
-                self.inner.next().map($wasm_item_type::from)
-            }
-        }
-        
-    };
-}
-
-
 #[wasm_bindgen(js_name = "checkErrors")]
-pub fn check_errors(input: String) -> ParseErrorList {
+pub fn check_errors(input: String) -> parse_error_list::ReturnValue {
     let errors = Header::parse(input, &mut rand::thread_rng())
         .err()
-        .unwrap_or_else(|| vec![]);
-    ParseErrorList::from(errors)
+        .unwrap_or_else(|| vec![])
+        .into_iter()
+        .map(ParseError::from)
+        .collect::<Vec<_>>();
+    ParseErrorList::from(errors).into_js_array()
 }
 
-wrapper_list! { ParseErrorList, ParseError, SeedgenParseError }
+wrapper_list! {
+    #[wasm_bindgen]
+    pub struct ParseErrorList {
+        inner: IntoIter<ParseError>,
+    }
+    mod parse_error_list { typescript_type = "ParseError[]" }
+}
 
-wrapper_type! { ParseError, SeedgenParseError }
+wrapper_type! {
+    #[wasm_bindgen]
+    pub struct ParseError {
+        inner: SeedgenParseError,
+    }
+}
 #[wasm_bindgen]
 impl ParseError {
     pub fn message(&self) -> String {
@@ -80,7 +60,12 @@ pub fn parse_line(input: String) -> Option<HeaderContent> {
     Some(content)
 }
 
-wrapper_type! { HeaderContent, SeedgenHeaderContent }
+wrapper_type! {
+    #[wasm_bindgen]
+    pub struct HeaderContent {
+        inner: SeedgenHeaderContent,
+    }
+}
 #[wasm_bindgen]
 impl HeaderContent {
     pub fn description(&self) -> Option<Vec<JsString>> {

@@ -20,24 +20,13 @@ const completionTriggerCharacters = [
 
 const filePattern = "**/*.{wotwr,wotwrh}";
 
-function toArray<T>(wasmList: { next: () => T | undefined }): T[] {
-    const items = [];
-    while (true) {
-        const item = wasmList.next();
-        if (item === undefined) {
-            return items;
-        }
-        items.push(item);
-    }
-}
-
 class HeaderCompletionItemProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[]> {
         const documentLine = document.lineAt(position);
         const text = documentLine.text;
 
         const errors = checkErrors(text);
-        const error = toArray(errors)[0];
+        const error = errors[0];
         if (error === undefined) { return null; }
 
         return offerCompletions(error, text);
@@ -104,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 function updateDiagnostics(document: vscode.TextDocument, collection: vscode.DiagnosticCollection) {
     const text = document.getText();
     const errors = checkErrors(text);
-    const diagnostics = toArray(errors).map(error => {
+    const diagnostics = errors.map(error => {
         const message = error.message();
         const start = document.positionAt(error.startIndex());
         const end = document.positionAt(error.endIndex());
