@@ -26,6 +26,7 @@ macro_rules! wrapper_list {
         }
         mod $mod_name:ident { typescript_type = $return_ty:literal }
     ) => {
+        #[doc = " Used internally to construct arrays"]
         $(#[$attribute])*
         pub struct $wasm_type {
             $field: ::std::vec::IntoIter<$wrapped_type>
@@ -37,9 +38,10 @@ macro_rules! wrapper_list {
         }
         #[wasm_bindgen]
         impl $wasm_type {
-            pub fn into_js_array(self) -> $mod_name::ReturnValue {
+            fn into_js_array(self) -> $mod_name::ReturnValue {
                 $mod_name::toArray(self)
             }
+            #[wasm_bindgen(skip_typescript)]
             pub fn next(&mut self) -> ::std::option::Option<$wrapped_type> {
                 self.$field.next()
             }
@@ -51,7 +53,7 @@ macro_rules! wrapper_list {
                 #[wasm_bindgen(typescript_type = $return_ty)]
                 pub type ReturnValue;
 
-                pub fn toArray(list: $wasm_type) -> ReturnValue;
+                pub(crate) fn toArray(list: $wasm_type) -> ReturnValue;
             }
         }
     }
