@@ -40,13 +40,13 @@ import { WheelPosition } from "./item/wheelPosition";
 import InterpolationCommand from "./interpolationCommand";
 
 export function offerCompletions(error: ParseError, text: string): CompletionItem[] | null {
-    const completion = error.completion();
+    const completion = error.completion;
     if (completion === undefined) { return null; }
 
     switch (completion) {
         case "Uber Group": return uberStateCompletions;
         case "Uber Id":
-            const groupRange = text.slice(0, error.startIndex() - 1);
+            const groupRange = text.slice(0, error.range.start - 1);
             const start = groupRange.lastIndexOf("|") + 1;
             const group = +groupRange.slice(start);
             return uberIdCompletions(group);

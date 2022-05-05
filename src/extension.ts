@@ -94,11 +94,11 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
     const text = document.getText();
     const errors = checkErrors(text);
     const diagnostics = errors.map(error => {
-        const message = error.message();
-        const start = document.positionAt(error.startIndex());
-        const end = document.positionAt(error.endIndex());
+        const errorRange = error.range;
+        const start = document.positionAt(errorRange.start);
+        const end = document.positionAt(errorRange.end);
         const range = new vscode.Range(start, end);
-        return new vscode.Diagnostic(range, message);
+        return new vscode.Diagnostic(range, error.message);
     });
 
     collection.set(document.uri, diagnostics);

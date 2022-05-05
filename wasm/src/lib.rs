@@ -12,7 +12,7 @@ use seedgen::header::HeaderContent as SeedgenHeaderContent;
 pub fn check_errors(input: String) -> parse_error_list::ReturnValue {
     let errors = Header::parse(input, &mut rand::thread_rng())
         .err()
-        .unwrap_or_else(|| vec![])
+        .unwrap_or_default()
         .into_iter()
         .map(ParseError::from)
         .collect::<Vec<_>>();
@@ -35,19 +35,35 @@ wrapper_type! {
 }
 #[wasm_bindgen]
 impl ParseError {
+    #[wasm_bindgen(getter)]
     pub fn message(&self) -> String {
         self.inner.to_string()
     }
-    #[wasm_bindgen(js_name = "startIndex")]
-    pub fn start_index(&self) -> usize {
-        self.inner.range.start
+    #[wasm_bindgen(getter)]
+    pub fn range(&self) -> Range {
+        self.inner.range.clone().into()
     }
-    #[wasm_bindgen(js_name = "endIndex")]
-    pub fn end_index(&self) -> usize {
-        self.inner.range.end
-    }
+    #[wasm_bindgen(getter)]
     pub fn completion(&self) -> Option<String> {
         self.inner.suggestion.clone()
+    }
+}
+
+wrapper_type! {
+    #[wasm_bindgen]
+    pub struct Range {
+        inner: core::ops::Range<usize>,
+    }
+}
+#[wasm_bindgen]
+impl Range {
+    #[wasm_bindgen(getter)]
+    pub fn start(&self) -> usize {
+        self.inner.start
+    }
+    #[wasm_bindgen(getter)]
+    pub fn end(&self) -> usize {
+        self.inner.end
     }
 }
 
