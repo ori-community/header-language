@@ -46,9 +46,11 @@ export function offerCompletions(error: ParseError, text: string): CompletionIte
     switch (completion) {
         case "Uber Group": return uberStateCompletions;
         case "Uber Id":
-            const groupRange = text.slice(0, error.range.start - 1);
-            const start = groupRange.lastIndexOf("|") + 1;
-            const group = +groupRange.slice(start);
+            let groupText = text.slice(0, error.range.start);
+            const groupSeparator = groupText.lastIndexOf("|");
+            groupText = groupText.slice(0, groupSeparator);
+            const start = groupText.lastIndexOf("|") + 1;
+            const group = +groupText.slice(start);
             return uberIdCompletions(group);
         case "Uber Id": return null;
         case "Uber Trigger Value": return null;
