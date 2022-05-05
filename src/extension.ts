@@ -51,18 +51,6 @@ class HeaderHoverProvider implements vscode.HoverProvider {
     }
 }
 
-async function provideDiagnostics(collection: vscode.DiagnosticCollection) {
-    const files = await vscode.workspace.findFiles(filePattern);
-    for (const uri of files) {
-        try {
-            const document = await vscode.workspace.openTextDocument(uri);
-            updateDiagnostics(document, collection);
-        } catch (e) {
-            console.warn(e);
-        }
-    }
-}
-
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerHoverProvider("ori-wotw-header", new HeaderHoverProvider));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider("ori-wotw-header", new HeaderCompletionItemProvider, ...completionTriggerCharacters));
@@ -70,7 +58,9 @@ export function activate(context: vscode.ExtensionContext) {
     const diagnosticsCollection = vscode.languages.createDiagnosticCollection("ori-wotw-header");
     context.subscriptions.push(diagnosticsCollection);
 
-    provideDiagnostics(diagnosticsCollection);
+    for (const document of vscode.workspace.textDocuments.filter(document => document.languageId === "ori-wotw-header")) {
+        updateDiagnostics(document, diagnosticsCollection);
+    }
 
     vscode.workspace.onDidOpenTextDocument(event => {
         if (vscode.languages.match({ language: "ori-wotw-header" }, event) > 0) {
