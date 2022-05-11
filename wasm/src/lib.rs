@@ -1,12 +1,14 @@
 mod describe;
 mod helpers;
 
+use std::ops::Deref;
+
 use wasm_bindgen::prelude::*;
 use js_sys::JsString;
 
-use seedgen::Header;
-use seedgen::header::parser::ParseError as SeedgenParseError;
-use seedgen::header::HeaderContent as SeedgenHeaderContent;
+use wotw_seedgen::Header;
+use wotw_seedgen::languages::ParseError as SeedgenParseError;
+use wotw_seedgen::header::HeaderContent as SeedgenHeaderContent;
 
 #[wasm_bindgen(js_name = "checkErrors")]
 /// Parses the input string to check for errors  
@@ -15,6 +17,8 @@ pub fn check_errors(input: String) -> parse_error_list::ReturnValue {
     let errors = Header::parse(input, &mut rand::thread_rng())
         .err()
         .unwrap_or_default()
+        .deref()
+        .to_owned()
         .into_iter()
         .map(ParseError::from)
         .collect::<Vec<_>>();

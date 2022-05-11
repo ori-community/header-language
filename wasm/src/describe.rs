@@ -1,6 +1,6 @@
 use js_sys::JsString;
 
-use seedgen::header::{Annotation, HeaderCommand, TimerDefinition, VPickup};
+use wotw_seedgen::header::{Annotation, HeaderCommand, TimerDefinition, VPickup};
 
 pub fn annotation(annotation: &Annotation) -> Vec<JsString> {
     let description = match annotation {
