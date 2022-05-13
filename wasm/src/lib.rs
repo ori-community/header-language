@@ -1,5 +1,4 @@
 mod describe;
-mod helpers;
 
 use std::ops::Deref;
 
@@ -10,10 +9,12 @@ use wotw_seedgen::Header;
 use wotw_seedgen::languages::ParseError as SeedgenParseError;
 use wotw_seedgen::header::HeaderContent as SeedgenHeaderContent;
 
+use wasm_bindgen_helper_macros::{wrapper_type, wrapper_list};
+
 #[wasm_bindgen(js_name = "checkErrors")]
 /// Parses the input string to check for errors  
 /// Returns all `ParseError`s that occured, or an empty array
-pub fn check_errors(input: String) -> parse_error_list::ReturnValue {
+pub fn check_errors(input: String) -> parse_error_list::ReturnArray {
     let errors = Header::parse(input, &mut rand::thread_rng())
         .err()
         .unwrap_or_default()
