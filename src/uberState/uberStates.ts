@@ -302,6 +302,106 @@ const uberStates: UberState[] = [
     uberId: 20,
   },
   {
+    id: "game_state.On Jump",
+    groupId: 3,
+    uberId: 30,
+  },
+  {
+    id: "game_state.On Double Jump",
+    groupId: 3,
+    uberId: 31,
+  },
+  {
+    id: "game_state.On Dash",
+    groupId: 3,
+    uberId: 32,
+  },
+  {
+    id: "game_state.On Bash",
+    groupId: 3,
+    uberId: 33,
+  },
+  {
+    id: "game_state.On Glide",
+    groupId: 3,
+    uberId: 34,
+  },
+  {
+    id: "game_state.On Sword",
+    groupId: 3,
+    uberId: 35,
+  },
+  {
+    id: "game_state.On Hammer",
+    groupId: 3,
+    uberId: 36,
+  },
+  {
+    id: "game_state.On Spike",
+    groupId: 3,
+    uberId: 37,
+  },
+  {
+    id: "game_state.On Spirit Star",
+    groupId: 3,
+    uberId: 38,
+  },
+  {
+    id: "game_state.On Light Burst",
+    groupId: 3,
+    uberId: 39,
+  },
+  {
+    id: "game_state.On Bow",
+    groupId: 3,
+    uberId: 40,
+  },
+  {
+    id: "game_state.On Blaze",
+    groupId: 3,
+    uberId: 41,
+  },
+  {
+    id: "game_state.On Sentry",
+    groupId: 3,
+    uberId: 42,
+  },
+  {
+    id: "game_state.On Flash",
+    groupId: 3,
+    uberId: 43,
+  },
+  {
+    id: "game_state.On Launch",
+    groupId: 3,
+    uberId: 44,
+  },
+  {
+    id: "game_state.On Wall Jump",
+    groupId: 3,
+    uberId: 45,
+  },
+  {
+    id: "game_state.On Burrow",
+    groupId: 3,
+    uberId: 46,
+  },
+  {
+    id: "game_state.On Water Dash",
+    groupId: 3,
+    uberId: 47,
+  },
+  {
+    id: "game_state.On Flap",
+    groupId: 3,
+    uberId: 48,
+  },
+  {
+    id: "game_state.On Regenerate",
+    groupId: 3,
+    uberId: 49,
+  },
+  {
     id: "game_state.Reload",
     groupId: 3,
     uberId: 1,
