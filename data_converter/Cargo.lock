@@ -401,9 +401,9 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "wotw_seedgen"
-version = "0.0.4"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14b4ce0a23f3cd5f11f6523645c94bc46abdac3987e3a7a55485bed7dbde6ce0"
+checksum = "4bf488c222b8db144e0aa47ef34bfd4280442b58eb9d61ec1502d849c0b7e6c8"
 dependencies = [
  "ansi_term",
  "csv",

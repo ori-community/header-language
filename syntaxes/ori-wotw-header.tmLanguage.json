@@ -37,7 +37,7 @@
             }
         },
         "uberState": {
-            "begin": "^(!)?(\\d+\\|\\d+(?:=\\d+)?\\|)",
+            "begin": "^(!)?(\\d+\\|\\d+(?:(?:=|<=|<|>=|>)\\d+)?\\|)",
             "end": "$|(?=//)",
             "beginCaptures": {
                 "1": { "name": "keyword" },
@@ -711,7 +711,7 @@
             "name": "keyword"
         },
         "annotation": {
-            "match": "^#\\w+",
+            "match": "^#[^\n]*",
             "name": "keyword"
         },
         "placeholder": {

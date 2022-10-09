@@ -1,10 +1,11 @@
 use js_sys::JsString;
 
-use wotw_seedgen::header::{Annotation, HeaderCommand, TimerDefinition, VPickup};
+use wotw_seedgen::header::{Annotation, HeaderCommand, GoalmodeHack, TimerDefinition, VPickup};
 
 pub fn annotation(annotation: &Annotation) -> Vec<JsString> {
     let description = match annotation {
-        Annotation::Hide => "Hide this header from the public interface"
+        Annotation::Hide => "Hide this header from the public interface".to_string(),
+        Annotation::Category(category) => format!("Show this header under the {category} category"),
     };
     let description = format!("**Annotation**\n\n{description}");
     vec![description.into()]
@@ -25,13 +26,19 @@ pub fn command(command: &HeaderCommand) -> Vec<JsString> {
         HeaderCommand::Set { state } => format!("Sets the logic state \"{state}\" to be met"),
         HeaderCommand::If { parameter, value } => format!("Opens a block that will only be added to the seed if the parameter \"{parameter}\" is \"${value}\""),
         HeaderCommand::EndIf => "Closes one if block".to_string(),
+        HeaderCommand::GoalmodeHack(hack) => match hack {
+            GoalmodeHack::Trees => "Enables the All Trees goalmode".to_string(),
+            GoalmodeHack::Wisps => "Enables the All Wisps goalmode".to_string(),
+            GoalmodeHack::Quests => "Enables the All Quests goalmode".to_string(),
+            GoalmodeHack::Relics { chance, amount } => format!("Enables the Relics goalmode with {chance} relic chance per area or {amount} relics"),
+        },
     };
     let description = format!("**Command**\n\n{description}");
     vec![description.into()]
 }
 
 pub fn timer(timer: &TimerDefinition) -> Vec<JsString> {
-    let description = format!("**Timer**\n\nBind a timer on {} to a toggle on {}", timer.timer, timer.toggle);
+    let description = format!("**Timer**\n\nBind a timer on {} to a toggle on {}", timer.counter, timer.switch);
     vec![description.into()]
 }
 
