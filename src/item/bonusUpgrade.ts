@@ -1,5 +1,3 @@
-import { ItemVariant } from "../item";
-
 export enum BonusUpgradeVariant {
     rapidHammer = 0,
     rapidSword = 1,
@@ -16,8 +14,4 @@ export enum BonusUpgradeVariant {
     staticStar = 47,
     chargeBlaze = 48,
     rapidSentry = 49,
-}
-export interface BonusUpgrade {
-    id: ItemVariant.bonusUpgrade,
-    variant: BonusUpgradeVariant,
 }

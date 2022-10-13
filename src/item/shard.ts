@@ -1,5 +1,3 @@
-import { ItemVariant } from "../item";
-
 export enum ShardVariant {
     overcharge = 1,
     tripleJump = 2,
@@ -32,9 +30,4 @@ export enum ShardVariant {
     deflector = 44,
     fracture = 46,
     arcing = 47,
-}
-export interface Shard {
-    id: ItemVariant.shard,
-    variant: ShardVariant,
-    remove: boolean,
 }

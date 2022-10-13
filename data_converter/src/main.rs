@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 use serde::Serialize;
-use seedgen::{lexer::parser, util::UberState};
+use wotw_seedgen::{lexer::parser, util::UberState};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
