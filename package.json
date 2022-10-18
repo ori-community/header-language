@@ -2,7 +2,7 @@
 	"name": "header-language",
 	"displayName": "Ori WotW Header Language",
 	"description": "Support for the .wotwrh language",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"publisher": "orirando",
 	"license": "MIT",
 	"repository": {

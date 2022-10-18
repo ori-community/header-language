@@ -51,13 +51,25 @@ impl ParseError {
     #[wasm_bindgen(getter)]
     /// `Range` that can be used to index the source file to find the source of the error
     pub fn range(&self) -> Range {
-        self.inner.range.clone().into()
+        (char_index(&self.inner.source, self.inner.range.start)..char_index(&self.inner.source, self.inner.range.end)).into()
     }
     #[wasm_bindgen(getter)]
     /// A suggestion for what kind of syntax may belong here
     pub fn completion(&self) -> Option<String> {
         self.inner.suggestion.clone()
     }
+}
+
+/// converts a Rust string index (byte) to the corresponding javascript string index (character)
+fn char_index(source: &str, byte_index: usize) -> usize {
+    for (char_index, (index, _)) in source.char_indices().enumerate() {
+        if index == byte_index {
+            return char_index;
+        } else if index > byte_index {
+            panic!("index {byte_index} was not on a char boundary");
+        }
+    }
+    panic!("index {byte_index} was out of bounds");
 }
 
 wrapper_type! {
