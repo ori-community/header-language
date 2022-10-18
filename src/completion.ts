@@ -31,6 +31,7 @@ import commandCompletions from "./completion/commandCompletion";
 import parameterTypeCompletions from "./completion/parameterTypeCompletion";
 import { ItemVariant } from "./item";
 import { AnnotationVariant } from "./annotation";
+import { PickupFlagVariant } from "./pickupFlag";
 import { FlagVariant } from "./flag";
 import { ParseError } from "wotw-seedgen";
 import { Slot } from "./item/slot";
@@ -89,6 +90,7 @@ export function offerCompletions(error: ParseError, text: string): CompletionIte
         case "HeaderCommand": return commandCompletions;
         case "ParameterType": return parameterTypeCompletions;
         case "Annotation": return getNameCompletions(AnnotationVariant);
+        case "PickupFlag": return getNameCompletions(PickupFlagVariant);
         // case CompletionVariant.flag: return getNameCompletions(FlagVariant);
         default:
             vscode.window.showWarningMessage(`Received unknown completion request "${completion}"`);
