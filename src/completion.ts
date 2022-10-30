@@ -77,7 +77,7 @@ export function offerCompletions(error: ParseError, text: string): CompletionIte
         case "Zone": return getItemCompletions(ZoneVariants);
         case "Sys Message Kind": return getItemCompletions(ProgressVariant);
         case "Wheel Command Kind": return getItemCompletions(WheelCommandVariant);
-        case "IconKind": return iconTypeCompletions;
+        case "Icon Kind": return iconTypeCompletions;
         case "Shard Icon": return getItemCompletions(ShardIconVariant);
         case "Spell Icon": return getItemCompletions(SpellIconVariant);
         case "Opher Icon": return getItemCompletions(OpherIconVariant);
@@ -87,10 +87,10 @@ export function offerCompletions(error: ParseError, text: string): CompletionIte
         case "Wheel Bind": return wheelBindCompletions;
         case "Wheel Item Position": return getItemCompletions(WheelPosition);
         case "Shop Command Kind": return getItemCompletions(ShopCommandVariant);
-        case "HeaderCommand": return commandCompletions;
-        case "ParameterType": return parameterTypeCompletions;
+        case "Header Command": return commandCompletions;
+        case "Parameter Type": return parameterTypeCompletions;
         case "Annotation": return getNameCompletions(AnnotationVariant);
-        case "PickupFlag": return getNameCompletions(PickupFlagVariant);
+        case "Pickup Flag": return getNameCompletions(PickupFlagVariant);
         // case CompletionVariant.flag: return getNameCompletions(FlagVariant);
         default:
             vscode.window.showWarningMessage(`Received unknown completion request "${completion}"`);
